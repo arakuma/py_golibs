@@ -11,16 +11,22 @@
 from utility import BaseObject
 
 # ENUMS
-GAME_RESULT_BASE          = 0
-GAME_RESULT_DRAW          = GAME_RESULT_BASE + 1
-GAME_RESULT_BLACK_WINS    = GAME_RESULT_BASE + 2
-GAME_RESULT_WHITE_WINS    = GAME_RESULT_BASE + 3
-GAME_RESULT_BLACK_RESIGNS = GAME_RESULT_BASE + 4
-GAME_RESULT_WHITE_RESIGNS = GAME_RESULT_BASE + 5
+GAME_RESULT_BASE    = 0
+GAME_RESULT_DRAW    = GAME_RESULT_BASE + 1
+GAME_RESULT_WINS    = GAME_RESULT_BASE + 2
+GAME_RESULT_RESIGNS = GAME_RESULT_BASE + 3
+GAME_STONE_BASE     = 10
+GAME_STONE_BLACK    = GAME_STONE_BASE + 1
+GAME_STONE_WHITE    = GAME_STONE_BASE + 2
 
 # MODELS
 class GoGame(BaseObject):
     '''A game model of Go'''
+    def __init__(self):
+        self.kifuInfo = KifuInfo()
+        self.info = GoGameInfo()
+
+class KifuInfo(BaseObject):
     def __init__(self):
         self.format = ""
         self.app_name = ""
@@ -59,5 +65,6 @@ class GoGameInfo(BaseObject):
 class GoGameResult(BaseObject):
     '''Result of a Go game, including winning party and score'''
     def __init__(self):
-        self.fact = GAME_RESULT_BASE
+        self.type = GAME_RESULT_BASE
+        self.winning_party = GAME_STONE_BASE
         self.score = 0.0

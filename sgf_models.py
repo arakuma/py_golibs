@@ -19,3 +19,10 @@ class SgfNode(BaseObject):
         self.next = None     # another SgfNode
         self.variations = [] # if variations are available,
                              #    self.next will be variations[0][0]
+        self.properties = []
+
+class SgfProperty(BaseObject):
+    '''Property of sgf format'''
+    def __init__(self):
+        self.ident = ""
+        self.value = ""
