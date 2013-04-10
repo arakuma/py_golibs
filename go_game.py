@@ -8,10 +8,10 @@
 # Copyright:   (c) Si Wei 2013
 #-------------------------------------------------------------------------------
 
-import utility
+from utility import BaseObject
 
 # ENUMS
-GAME_RESULT_BASE       = 0
+GAME_RESULT_BASE          = 0
 GAME_RESULT_DRAW          = GAME_RESULT_BASE + 1
 GAME_RESULT_BLACK_WINS    = GAME_RESULT_BASE + 2
 GAME_RESULT_WHITE_WINS    = GAME_RESULT_BASE + 3

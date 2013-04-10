@@ -9,20 +9,22 @@
 # Copyright:   (c) Si Wei 2013
 #-------------------------------------------------------------------------------
 
+import re
+
 # sgf value type patterns
 # see http://www.red-bean.com/sgf/sgf4.html
-VTP_UCLETTER   = "[a-zA-Z]"
-VTP_DIGIT      = "\d"
-VTP_NONE       = "^"
-VTP_NUMBER     = "[+-]?\d+"
-VTP_REAL       = "\d(.\d+)?"
-VTP_DOUBLE     = "[12]"
-VTP_COLOR      = "[BW]"
-VTP_SIMPLETEXT = "^([^:\]\\]|\\.)*"
-VTP_TEXT       = "^([^:\]\\]|\\.)*"
-VTP_POINT      = "[a-zA-Z]{2}"
-VTP_MOVE       = "[a-zA-Z]{2}"
-VTP_STONE      = "[BW]"
+VTP_UCLETTER   = re.compile("[a-zA-Z]")
+VTP_DIGIT      = re.compile("\d")
+VTP_NONE       = re.compile("^")
+VTP_NUMBER     = re.compile("[+-]?\d+")
+VTP_REAL       = re.compile("\d(.\d+)?")
+VTP_DOUBLE     = re.compile("[12]")
+VTP_COLOR      = re.compile("[BW]")
+VTP_SIMPLETEXT = re.compile("^([^:\]\\]|\\.)*")
+VTP_TEXT       = re.compile("^([^:\]\\]|\\.)*")
+VTP_POINT      = re.compile("[a-zA-Z]{2}")
+VTP_MOVE       = re.compile("[a-zA-Z]{2}")
+VTP_STONE      = re.compile("[BW]")
 
 # sgf properties definition
 # see http://www.red-bean.com/sgf/proplist_t.html

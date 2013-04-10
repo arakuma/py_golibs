@@ -10,11 +10,12 @@
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 
-import utility
+from utility import BaseObject
 
 class SgfNode(BaseObject):
     '''Basic node of sgf format'''
     def __init__(self):
+        self.index = 0       # pre-order recursion node index
         self.next = None     # another SgfNode
         self.variations = [] # if variations are available,
                              #    self.next will be variations[0][0]
