@@ -25,4 +25,10 @@ class SgfProperty(BaseObject):
     '''Property of sgf format'''
     def __init__(self):
         self.ident = ""
-        self.value = ""
+        self.values = []
+
+class SgfPropertyValue(BaseObject):
+    '''Value of property'''
+    def __init__(self):
+        self.valueA = ""
+        self.valueB = ""

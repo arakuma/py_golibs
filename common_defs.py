@@ -11,20 +11,30 @@
 
 import re
 
+# character constants
+CHAR_TREE_BEGIN     = "("
+CHAR_TREE_END       = ")"
+CHAR_VALUE_BEGIN    = "["
+CHAR_VALUE_END      = "]"
+CHAR_NODE_PREFIX    = ";"
+CHAR_COMPOSE_VALUE  = ":"
+
 # sgf value type patterns
 # see http://www.red-bean.com/sgf/sgf4.html
-VTP_UCLETTER   = re.compile("[a-zA-Z]")
-VTP_DIGIT      = re.compile("\d")
+VTP_UCLETTER   = re.compile("^[A-Z]")
+VTP_DIGIT      = re.compile("^\d")
 VTP_NONE       = re.compile("^")
-VTP_NUMBER     = re.compile("[+-]?\d+")
-VTP_REAL       = re.compile("\d(.\d+)?")
-VTP_DOUBLE     = re.compile("[12]")
-VTP_COLOR      = re.compile("[BW]")
-VTP_SIMPLETEXT = re.compile("^([^:\]\\]|\\.)*")
-VTP_TEXT       = re.compile("^([^:\]\\]|\\.)*")
-VTP_POINT      = re.compile("[a-zA-Z]{2}")
-VTP_MOVE       = re.compile("[a-zA-Z]{2}")
-VTP_STONE      = re.compile("[BW]")
+VTP_NUMBER     = re.compile("^[+-]?\d+")
+VTP_REAL       = re.compile("^\d(.\d+)?")
+VTP_DOUBLE     = re.compile("^[12]")
+VTP_COLOR      = re.compile("^[BW]")
+VTP_SIMPLETEXT = re.compile("^([^:\]\\\\]|\.)*")
+VTP_TEXT       = re.compile("^([^:\]\\\\]|\.)*")
+VTP_POINT      = re.compile("^[a-zA-Z]{2}")
+VTP_MOVE       = re.compile("^[a-zA-Z]{2}")
+VTP_STONE      = re.compile("^[BW]")
+# ValueType  = (None | Number | Real | Double | Color | SimpleText | Text | Point  | Move | Stone)
+VT_PATTERNS    = [VTP_NUMBER,VTP_REAL,VTP_DOUBLE,VTP_COLOR,VTP_SIMPLETEXT,VTP_TEXT,VTP_POINT,VTP_TEXT,VTP_STONE]
 
 # sgf properties definition
 # see http://www.red-bean.com/sgf/proplist_t.html
@@ -39,7 +49,7 @@ PROP_MN          = "MN"   #set MoveNumber
 PROP_OB          = "OB"   #OtStones Black
 PROP_OW          = "OW"   #OtStones White
 PROP_TE          = "TE"   #Tesuji
-PROP_W           = "W"   #White
+PROP_W           = "W"    #White
 ## setup
 PROP_WL          = "WL"   #White time left
 PROP_AB          = "AB"   #Add Black
@@ -48,7 +58,7 @@ PROP_AW          = "AW"   #Add White
 PROP_PL          = "PL"   #Player to play
 ## -
 PROP_AR          = "AR"   #Arrow
-PROP_C           = "C"   #Comment
+PROP_C           = "C"    #Comment
 PROP_CR          = "CR"   #Circle
 PROP_DD          = "DD"   #Dim points
 PROP_DM          = "DM"   #Even position
@@ -59,13 +69,13 @@ PROP_HO          = "HO"   #Hotspot
 PROP_LB          = "LB"   #Label
 PROP_LN          = "LN"   #Line
 PROP_MA          = "MA"   #Mark
-PROP_N           = "N"   #Nodename
+PROP_N           = "N"    #Nodename
 PROP_PM          = "PM"   #Print move mode
 PROP_SL          = "SL"   #Selected
 PROP_SQ          = "SQ"   #Square
 PROP_TR          = "TR"   #Triangle
 PROP_UC          = "UC"   #Unclear pos
-PROP_V           = "V"   #Value
+PROP_V           = "V"    #Value
 PROP_VW          = "VW"   #View
 ## root
 PROP_AP          = "AP"   #Application
@@ -107,10 +117,3 @@ PROP_IP          = "IP"   #Initial pos.
 PROP_IY          = "IY"   #Invert Y-axis
 PROP_SE          = "SE"   #Markup
 PROP_SU          = "SU"   #Setup type
-PROP_CA          = "CA"   #
-PROP_CA          = "CA"   #
-PROP_CA          = "CA"   #
-PROP_CA          = "CA"   #
-PROP_CA          = "CA"   #
-PROP_CA          = "CA"   #
-PROP_CA          = "CA"   #

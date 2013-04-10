@@ -13,12 +13,14 @@
 from utility import BaseObject
 from go_game import *
 from sgf_models import *
+from common_defs import *
+from string import whitespace
 
 class SgfParser(BaseObject):
 # constructors
     def __init__(self):
         self._working_game = GoGame()
-        self._curPos = 0
+        self._cur_pos = 0
         self._working_sgf = ""
 
 # public methods
@@ -54,33 +56,115 @@ class SgfParser(BaseObject):
 
 # private methods / Sgf models parsing
     def _parse_game_tree(self):
-        rootNode = SgfNode()
-        return rootNode
+        # Collection = GameTree { GameTree }
+        # directly init a solid SgfNode here because of...code intelligence:)
+        treeRootNode = SgfNode()
+        # GameTree   = "(" Sequence { GameTree } ")"
+        if self._accept_char(CHAR_TREE_BEGIN):
+            # Sequence   = Node { Node }
+            currentNode = treeRootNode
+            nextNode = self._parse_node()
+            while nextNode is not None:
+                currentNode.next = nextNode
+                currentNode = nextNode
+                nextNode = self._parse_node()
+            # GameTree   = "(" Sequence { GameTree } ")"
+            subTreeRootNode = self._parse_game_tree()
+            while subTreeRootNode is not None:
+                currentNode.variations.append(subTreeRootNode)
+                subTreeRootNode = self._parse_game_tree()
+            self._accept_char(CHAR_TREE_END)
+            return treeRootNode
+        return None
 
     def _parse_node(self):
-        pass
+        treeNode = SgfNode()
+        # Node       = ";" { Property }
+        if self._accept_char(CHAR_NODE_PREFIX):
+            prop = self._parse_property()
+            while prop is not None:
+                treeNode.properties.append(prop)
+                prop = self._parse_property()
+            return treeNode
+        return None
 
     def _parse_property(self):
-        pass
+        # Property   = PropIdent PropValue { PropValue }
+        prop = SgfProperty()
+        # PropIdent  = UcLetter { UcLetter }
+        while self._test_pattern(VTP_UCLETTER):
+            prop.ident += self._move_next()
+        # PropValues
+        value = self._parse_property_value()
+        while value is not None:
+            prop.values.append(value)
+            value = self._parse_property_value()
+        # be sure property is filled up properly
+        if len(prop.ident) == 0 or len(prop.value) == 0:
+            return None
+        return prop
+
+    def _parse_property_value(self):
+        # CValueType = (ValueType | Compose)
+        propValue = SgfPropertyValue()
+        # PropValue  = "[" CValueType "]"
+        if self._accept_char(CHAR_VALUE_BEGIN):
+            propValue.valueA = self._parse_property_valuetype_value()
+            # Compose    = ValueType ":" ValueType
+            if self._accept_char(CHAR_COMPOSE_VALUE):
+                propValue.valueB = self._parse_property_valuetype_value()
+            self._accept_char(CHAR_VALUE_END)
+        if len(propValue.valueA) == 0:
+            return None
+        return propValue
+
+    def _parse_property_valuetype_value(self):
+        simpleValue = ""
+        curText = self._working_sgf[self._cur_pos:]
+        # use the longest result of all results from ValueType patterns
+        longestMatch = None
+        for pattern in VT_PATTERNS:
+            match = pattern.match(curText)
+            if match is not None:
+                if longestMatch is not None:
+                    if longestMatch.endpos - longestMatch.pos < match.endpos - match.pos:
+                        longestMatch = match
+                else:
+                    longestMatch = match
+        if longestMatch is not None:
+            for i in range(longestMatch.pos,longestMatch.endpos):
+                simpleValue += self._move_next()
+        # FF[4] Section 3.3:
+        # Formatting: linebreaks preceded by a "\" are converted to "",
+        #   i.e. they are removed (same as Text type). All other linebreaks are
+        #   converted to space (no newline on display!!).
+        simpleValue = ' '.join(simpleValue.split())
+        return simpleValue
 
 # private methods / character processing
-    def _accept_current(self):
-        _curPos += 1
+    def _move_next(self):
+        curChar = self._working_sgf[self._cur_pos]
+        self._cur_pos += 1
+        return curChar
 
     def _accept_char(self,char):
-        if _working_sgf[_curPos] == char:
-            self._accept_current()
-            return True
-        return False
+        try:
+            self._accept_whitespaces()
+            if self._working_sgf[self._cur_pos] == char:
+                self._move_next()
+                return True
+            return False
+        except:
+            print len(self._working_sgf),self._cur_pos
 
     def _accept_whitespaces(self):
-        while(_working_sgf[_curPos] in string.whitespace):
-            self._accept_current()
+        while self._working_sgf[self._cur_pos].isspace():
+            self._move_next()
 
     def _test_char(self,prefix):
         self._accept_whitespaces()
-        return _working_sgf[_curPos] == prefix
+        return self._working_sgf[self._cur_pos] == prefix
 
     def _test_pattern(self,pattern):
         self._accept_whitespaces()
-        return pattern.match(_working_sgf[_curPos]
+        return pattern.match(self._working_sgf[self._cur_pos]) is not None
