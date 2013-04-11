@@ -38,6 +38,8 @@ class GameActionObserver:
     '''
     def move_performed(self, move):
         pass
+    def variation_available(self, moves):
+        pass
     def stone_added(self, stone, coord):
         pass
     def stone_removed(self, stone, coord):
@@ -45,11 +47,7 @@ class GameActionObserver:
     def mark_added(self, mark):
         pass
 
-# Models / Go game actions
-class Action(BaseObject):
-    def __init__(self, name):
-        self.name = name
-
+# Models / Basic structures
 class Coordinate(BaseObject):
     def __init__(self, x, y):
         self.x = x
@@ -81,6 +79,26 @@ class Move(BaseObject):
         self.is_black_good = False
         self.is_white_good = False
         self.is_hotspot    = False
+
+# Models / Go game actions
+class Action(BaseObject):
+    def __init__(self, name, marks = None):
+        self.name     = name
+        self.marks    = marks
+        # Action should be a double-linked node because it should be possible to
+        #     go forward/wind back during review
+        self.previous = None
+        self.next     = None
+
+class MoveAction(Action):
+    def __init__(self, name, move, marks = None):
+        super.__init__(name,marks)
+        self.move = move
+
+class StoneAction(Action):
+    def __init__(self, name, stones, marks = None):
+        super.__init__(name,marks)
+        self.stones = stones
 
 # Models / Go game itself
 class GoGame(BaseObject):

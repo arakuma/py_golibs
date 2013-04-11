@@ -49,17 +49,21 @@ class SgfParser(BaseObject):
         Read in sgf format text and parse it to a GoGame model
         This will be done in three phases:
             1. Parse the sgf text to the game tree collection
-            2. Visit all tree nodes and fill up game infomation
-            3. Assign root node to GoGame's game start node then later it could
-                be used for reviewing the game or directly go through the tree
+            2. Visit all tree nodes and fill up game infomation, basically the
+                root node will be read and properties of it are used
+            3. Convert sgf models to go game models for upper level uses,
+                here we should travel game trees and read out all other nodes,
+                fill up go game models with node properties and so on
         '''
         SgfParser.nodeIndex = 0
         self._working_sgf = sgf_text
         #1
         rootNode = self._parse_game_tree()
-        #2 and #3
+        #2
         self._init_go_game()
-        self._fill_up_game(rootNode)
+        self._process_game_info(rootNode)
+        #3
+        self._process_game_actions(rootNode)
         return self._working_game
 
     def write(self,game):
@@ -84,22 +88,14 @@ class SgfParser(BaseObject):
         game.settings.print_mode = PROP_VALUE_PRINT_MODE_AS_IS
         self._working_game = game
 
-    def _fill_up_game(self,rootNode):
-        # basicly travel all nodes of all game trees
-        #     and extract property values from nodes to fill up game info
-        self._extract_game_info(rootNode)
-        walkingNode = rootNode
-        #while walkingNode.next is not None:
-        #    walkingNode = rootNode.next
-
-    def _extract_game_info(self,gameInfoNode):
+    def _process_game_info(self,rootNode):
         # I was thinking of building a dict for propIdent-game.attribute
         #     to make it look nicer than the if-else statements
         #     unluckily seems it's not easy to get attribute name as string
         kifuInfo = self._working_game.kifuInfo
         gameInfo = self._working_game.info
         settings = self._working_game.settings
-        for prop in gameInfoNode.properties:
+        for prop in rootNode.properties:
             ident = prop.ident
             values = prop.values
             valuePair = values[0]
@@ -190,6 +186,90 @@ class SgfParser(BaseObject):
             else:
                 # unrecognized property ident
                 raise SgfTranslateException("unrecognized prop ident " + ident)
+
+    def _process_game_actions(self,rootNode):
+        # basicly travel all nodes of all game trees
+        #     and extract properties from nodes to fill up game models
+        walkingNode = rootNode
+        # sgf.node <-> gogame.action
+        while walkingNode is not None:
+            print walkingNode.properties[0].ident + "[" + walkingNode.properties[0].values[0].valueA + "],",
+            # node properties
+            action = self._get_action_from_node(walkingNode)
+            if len(walkingNode.variations) > 0:
+                # variations here is treated with recursion
+                for variationRootNode in walkingNode.variations:
+                    self._process_game_actions(variationRootNode)
+            else:
+                walkingNode = walkingNode.next
+
+    def _get_action_from_node(self,node):
+        for prop in node.properties:
+            ident = prop.ident
+            if ident == PROP_B or ident == PROP_W:
+                pass
+            elif ident == PROP_BL or ident == PROP_WL:
+                pass
+            elif ident == PROP_AB or ident == PROP_AW or ident == PROP_AW:
+                pass
+            elif ident == PROP_PL:
+                pass
+            elif ident == PROP_BM:
+                pass
+            elif ident == PROP_DO:
+                pass
+            elif ident == PROP_PL:
+                pass
+            elif ident == PROP_IT:
+                pass
+            elif ident == PROP_KO:
+                pass
+            elif ident == PROP_MN:
+                pass
+            elif ident == PROP_OB:
+                pass
+            elif ident == PROP_OW:
+                pass
+            elif ident == PROP_TE:
+                pass
+            elif ident == PROP_AR:
+                pass
+            elif ident == PROP_C:
+                pass
+            elif ident == PROP_DD:
+                pass
+            elif ident == PROP_FG:
+                pass
+            elif ident == PROP_GB:
+                pass
+            elif ident == PROP_GW:
+                pass
+            elif ident == PROP_V:
+                pass
+            elif ident == PROP_HO:
+                pass
+            elif ident == PROP_CR:
+                pass
+            elif ident == PROP_LB:
+                pass
+            elif ident == PROP_LN:
+                pass
+            elif ident == PROP_MA:
+                pass
+            elif ident == PROP_SL:
+                pass
+            elif ident == PROP_SQ:
+                pass
+            elif ident == PROP_TR:
+                pass
+            elif ident == PROP_UC:
+                pass
+            elif ident == PROP_PM:
+                pass
+            elif ident == PROP_N:
+                pass
+            elif ident == PROP_VW:
+                pass
 
 # private methods / Sgf models parsing
     def _parse_game_tree(self):

@@ -50,8 +50,8 @@ PROP_OB          = "OB"   #OtStones Black
 PROP_OW          = "OW"   #OtStones White
 PROP_TE          = "TE"   #Tesuji
 PROP_W           = "W"    #White
-## setup
 PROP_WL          = "WL"   #White time left
+## setup
 PROP_AB          = "AB"   #Add Black
 PROP_AE          = "AE"   #Add Empty
 PROP_AW          = "AW"   #Add White
