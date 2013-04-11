@@ -9,6 +9,7 @@
 #-------------------------------------------------------------------------------
 
 from utility import BaseObject
+from common_defs import *
 
 # ENUMS
 GAME_RESULT_BASE    = 0
@@ -28,10 +29,21 @@ class GoGame(BaseObject):
 
 class KifuInfo(BaseObject):
     def __init__(self):
-        self.format = ""
+        self.format = PROP_VALUE_FILE_FORMAT
         self.app_name = ""
         self.app_version = 0
-        self.info = GoGameInfo()
+        self.charset = ""
+        self.style = PROP_VALUE_STYLE_CHILDREN + PROP_VALUE_STYLE_MARK
+        boardSize = BoardSize()
+        boardSize.col = PROP_VALUE_BOARD_SIZE_GO
+        boardSize.row = PROP_VALUE_BOARD_SIZE_GO
+        self.size = boardSize
+        self.game = PROP_VALUE_GAME_GO
+
+class BoardSize(BaseObject):
+    def __init__(self):
+        self.row = 0
+        self.col = 0
 
 class GoGameInfo(BaseObject):
     '''

@@ -16,16 +16,16 @@ class SgfNode(BaseObject):
     '''Basic node of sgf format'''
     def __init__(self):
         self.index = 0       # pre-order recursion node index
-        self.next = None     # another SgfNode
+        self.next = None     # linked next SgfNode
         self.variations = [] # if variations are available,
-                             #    self.next will be variations[0][0]
-        self.properties = []
+                             #    self.next will be variations[0]
+        self.properties = [] # list of SgfProperty
 
 class SgfProperty(BaseObject):
     '''Property of sgf format'''
     def __init__(self):
         self.ident = ""
-        self.values = []
+        self.values = []     # list of SgfPropertyValue
 
 class SgfPropertyValue(BaseObject):
     '''Value of property'''

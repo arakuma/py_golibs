@@ -94,7 +94,7 @@ PROP_EV          = "EV"   #Event
 PROP_GC          = "GC"   #Game comment
 PROP_GN          = "GN"   #Game name
 PROP_ON          = "ON"   #Opening
-PROP_OT          = "OT"   #Opening
+PROP_OT          = "OT"   #Overtime
 PROP_PB          = "PB"   #Player Black
 PROP_PC          = "PC"   #Place
 PROP_PW          = "PW"   #Player White
@@ -117,3 +117,17 @@ PROP_IP          = "IP"   #Initial pos.
 PROP_IY          = "IY"   #Invert Y-axis
 PROP_SE          = "SE"   #Markup
 PROP_SU          = "SU"   #Setup type
+
+# property values
+PROP_VALUE_BLACK          = "B"
+PROP_VALUE_WHITE          = "W"
+PROP_VALUE_RESULT_DRAW    = "0"
+PROP_VALUE_RESULT_RESIGN  = "^([BW])\+R(esign)?$"
+PROP_VALUE_RESULT_WIN     = "^([BW])\+(\d+(.\d+)?)$"
+PROP_VALUE_GAME_GO        = "1"
+PROP_VALUE_BOARD_SIZE_GO  = 19
+PROP_VALUE_STYLE_CHILDREN = 0
+PROP_VALUE_STYLE_SIBLINGS = 1
+PROP_VALUE_STYLE_MARK     = 0
+PROP_VALUE_STYLE_NO_MARK  = 2
+PROP_VALUE_FILE_FORMAT    = 4
