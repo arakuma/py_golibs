@@ -157,7 +157,8 @@ class SgfParser(BaseObject):
         # Collection = GameTree { GameTree }
         treeRootNode = None
         # GameTree   = "(" Sequence { GameTree } ")"
-        if self._accept_char(CHAR_TREE_BEGIN):
+        if self._test_char(CHAR_TREE_BEGIN):
+            self._accept_char(CHAR_TREE_BEGIN)
             treeRootNode = self._parse_node()
             # Sequence   = Node { Node }
             currentNode = treeRootNode
@@ -179,7 +180,8 @@ class SgfParser(BaseObject):
     def _parse_node(self):
         treeNode = None
         # Node       = ";" { Property }
-        if self._accept_char(CHAR_NODE_PREFIX):
+        if self._test_char(CHAR_NODE_PREFIX):
+            self._accept_char(CHAR_NODE_PREFIX)
             treeNode = SgfNode()
             treeNode.index = SgfParser.nodeIndex
             SgfParser.nodeIndex += 1
@@ -209,14 +211,16 @@ class SgfParser(BaseObject):
         # CValueType = (ValueType | Compose)
         propValue = SgfPropertyValue()
         # PropValue  = "[" CValueType "]"
-        if self._accept_char(CHAR_VALUE_BEGIN):
+        if self._test_char(CHAR_VALUE_BEGIN):
+            self._accept_char(CHAR_VALUE_BEGIN)
             if self._test_char(CHAR_VALUE_END):
-                # None
-                self._move_next()
+                # None, emtpy prop value like "[]"
+                self._accept_char(CHAR_VALUE_END)
             else:
                 propValue.valueA = self._parse_property_valuetype_value()
                 # Compose    = ValueType ":" ValueType
-                if self._accept_char(CHAR_COMPOSE_VALUE):
+                if self._test_char(CHAR_COMPOSE_VALUE):
+                    self._move_next()
                     propValue.valueB = self._parse_property_valuetype_value()
                 self._accept_char(CHAR_VALUE_END)
                 if len(propValue.valueA) == 0 and len(propValue.valueB == 0):
@@ -258,8 +262,15 @@ class SgfParser(BaseObject):
         self._accept_whitespaces()
         if self._working_sgf[self._cur_pos] == char:
             self._move_next()
-            return True
-        return False
+        else:
+            ctxBoundPos = self._cur_pos + 10
+            if ctxBoundPos > len(self._working_sgf):
+                ctxBoundPos = len(self._working_sgf)
+            raise Exception("sgf parsing failed: at %d, expect '%s', provided '%s', context = '...%s'" %\
+                                (self._cur_pos,\
+                                char,\
+                                self._working_sgf[self._cur_pos],\
+                                self._working_sgf[self._cur_pos:ctxBoundPos]))
 
     def _accept_whitespaces(self):
         while self._working_sgf[self._cur_pos].isspace():
