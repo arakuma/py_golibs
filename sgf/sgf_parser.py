@@ -71,16 +71,17 @@ class SgfParser(BaseObject):
 # private methods / Go Game related
     def _init_go_game(self):
         game = GoGame()
-        game.format = PROP_VALUE_FILE_FORMAT
-        game.app_name = ""
-        game.app_version = 0
-        game.charset = ""
-        game.style = PROP_VALUE_STYLE_CHILDREN + PROP_VALUE_STYLE_MARK
+        game.kifuInfo.format = PROP_VALUE_FILE_FORMAT
+        game.kifuInfo.app_name = ""
+        game.kifuInfo.app_version = 0
+        game.kifuInfo.charset = ""
+        game.kifuInfo.style = PROP_VALUE_STYLE_CHILDREN + PROP_VALUE_STYLE_MARK
         boardSize = BoardSize()
         boardSize.col = PROP_VALUE_BOARD_SIZE_GO
         boardSize.row = PROP_VALUE_BOARD_SIZE_GO
-        game.size = boardSize
-        game.game = PROP_VALUE_GAME_GO
+        game.kifuInfo.size = boardSize
+        game.kifuInfo.game = PROP_VALUE_GAME_GO
+        game.settings.print_mode = PROP_VALUE_PRINT_MODE_AS_IS
         self._working_game = game
 
     def _fill_up_game(self,rootNode):

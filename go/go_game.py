@@ -18,8 +18,71 @@ GAME_RESULT_RESIGNS = GAME_RESULT_BASE + 3
 GAME_STONE_BASE     = 10
 GAME_STONE_BLACK    = GAME_STONE_BASE  + 1
 GAME_STONE_WHITE    = GAME_STONE_BASE  + 2
+GAME_MARK_BASE      = 50
+GAME_MARK_ARROW     = GAME_MARK_BASE   + 1
+GAME_MARK_CIRCLE    = GAME_MARK_BASE   + 2
+GAME_MARK_LABEL     = GAME_MARK_BASE   + 3
+GAME_MARK_LINE      = GAME_MARK_BASE   + 4
+GAME_MARK_X         = GAME_MARK_BASE   + 5
+GAME_MARK_SELECTED  = GAME_MARK_BASE   + 6
+GAME_MARK_SQUARE    = GAME_MARK_BASE   + 7
+GAME_MARK_TRIANGLE  = GAME_MARK_BASE   + 8
 
-# MODELS
+# Models / Game observer
+class GameActionObserver:
+    '''
+    Interface for being notified about all game actions:
+        1.stone add/remove
+        2.action performed
+        3.mark add
+    '''
+    def move_performed(self, move):
+        pass
+    def stone_added(self, stone, coord):
+        pass
+    def stone_removed(self, stone, coord):
+        pass
+    def mark_added(self, mark):
+        pass
+
+# Models / Go game actions
+class Action(BaseObject):
+    def __init__(self, name):
+        self.name = name
+
+class Coordinate(BaseObject):
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+
+class FigureInfo(BaseObject):
+    def __init__(self, options, name):
+        self.options = options
+        self.name = name
+
+class Mark(BaseObject):
+    def __init__(self, markType, fromX, fromY, toX = 0, toY = 0, text = ""):
+        self.type     = markType
+        self.from_pos = Coordinate(fromX,fromY)
+        self.to_pos   = Coordinate(toX,toY)
+        self.text     = text
+
+class Stone(BaseObject):
+    def __init__(self, color):
+        self.color = color # GAME_STONE_BASE
+
+class Move(BaseObject):
+    def __init__(self, stone, x, y, comment = "", figure = None):
+        self.stone         = stone
+        self.position      = Coordinate(x,y)
+        self.comment       = ""
+        self.figure        = figure
+        self.value         = 0
+        self.is_black_good = False
+        self.is_white_good = False
+        self.is_hotspot    = False
+
+# Models / Go game itself
 class GoGame(BaseObject):
     '''A game model of Go'''
     def __init__(self):
@@ -29,8 +92,7 @@ class GoGame(BaseObject):
 
 class GoGameSettings(BaseObject):
     def __init__(self):
-        self.figure_options = 0
-        self.print_mode     = 0
+        self.print_mode   = 0
 
 class KifuInfo(BaseObject):
     def __init__(self):
