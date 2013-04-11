@@ -8,8 +8,8 @@
 # Copyright:   (c) Si Wei 2013
 #-------------------------------------------------------------------------------
 
-from utility import BaseObject
-from common_defs import *
+from common.common_defs import *
+from common.utility import BaseObject
 
 # ENUMS
 GAME_RESULT_BASE    = 0

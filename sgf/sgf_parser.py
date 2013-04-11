@@ -10,10 +10,10 @@
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 
-from utility import BaseObject
-from go_game import *
+from common.common_defs import *
+from common.utility import BaseObject
+from go.go_game import *
 from sgf_models import *
-from common_defs import *
 from string import whitespace
 
 class SgfParser(BaseObject):

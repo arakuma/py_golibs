@@ -10,7 +10,7 @@
 # Licence:     <your licence>
 #-------------------------------------------------------------------------------
 
-from utility import BaseObject
+from common.utility import BaseObject
 
 class SgfNode(BaseObject):
     '''Basic node of sgf format'''
