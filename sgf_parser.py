@@ -39,7 +39,7 @@ class SgfParser(BaseObject):
         rootNode = self._parse_game_tree()
         #2 and #3
         self._fill_up_game(rootNode)
-        return _working_game
+        return self._working_game
 
     def write(self,game):
         '''
@@ -57,10 +57,10 @@ class SgfParser(BaseObject):
 # private methods / Sgf models parsing
     def _parse_game_tree(self):
         # Collection = GameTree { GameTree }
-        # directly init a solid SgfNode here because of...code intelligence:)
-        treeRootNode = SgfNode()
+        treeRootNode = None
         # GameTree   = "(" Sequence { GameTree } ")"
         if self._accept_char(CHAR_TREE_BEGIN):
+            treeRootNode = self._parse_node()
             # Sequence   = Node { Node }
             currentNode = treeRootNode
             nextNode = self._parse_node()
@@ -73,20 +73,21 @@ class SgfParser(BaseObject):
             while subTreeRootNode is not None:
                 currentNode.variations.append(subTreeRootNode)
                 subTreeRootNode = self._parse_game_tree()
+            if len(currentNode.variations) > 0:
+                currentNode.next = currentNode.variations[0]
             self._accept_char(CHAR_TREE_END)
-            return treeRootNode
-        return None
+        return treeRootNode
 
     def _parse_node(self):
-        treeNode = SgfNode()
+        treeNode = None
         # Node       = ";" { Property }
         if self._accept_char(CHAR_NODE_PREFIX):
+            treeNode = SgfNode()
             prop = self._parse_property()
             while prop is not None:
                 treeNode.properties.append(prop)
                 prop = self._parse_property()
-            return treeNode
-        return None
+        return treeNode
 
     def _parse_property(self):
         # Property   = PropIdent PropValue { PropValue }
@@ -101,7 +102,7 @@ class SgfParser(BaseObject):
             value = self._parse_property_value()
         # be sure property is filled up properly
         if len(prop.ident) == 0 or len(prop.value) == 0:
-            return None
+            prop = None
         return prop
 
     def _parse_property_value(self):
@@ -115,7 +116,7 @@ class SgfParser(BaseObject):
                 propValue.valueB = self._parse_property_valuetype_value()
             self._accept_char(CHAR_VALUE_END)
         if len(propValue.valueA) == 0:
-            return None
+            propValue = None
         return propValue
 
     def _parse_property_valuetype_value(self):
@@ -127,12 +128,12 @@ class SgfParser(BaseObject):
             match = pattern.match(curText)
             if match is not None:
                 if longestMatch is not None:
-                    if longestMatch.endpos - longestMatch.pos < match.endpos - match.pos:
+                    if len(match.group(0)) > len(longestMatch.group(0)):
                         longestMatch = match
                 else:
                     longestMatch = match
         if longestMatch is not None:
-            for i in range(longestMatch.pos,longestMatch.endpos):
+            for i in range(0,len(longestMatch.group(0))):
                 simpleValue += self._move_next()
         # FF[4] Section 3.3:
         # Formatting: linebreaks preceded by a "\" are converted to "",
