@@ -16,6 +16,25 @@ from go.go_game import *
 from sgf_models import *
 from string import whitespace
 
+class SgfException(Exception):
+    def __init__(self, message = None):
+        self._message = message
+    def __str__(self):
+        return self._message
+
+class SgfParseException(Exception):
+    '''
+    Exception for parsing phase, normally tells if there's anything unexpected
+    in sgf text
+    '''
+    pass
+
+class SgfTranslateException(Exception):
+    '''
+    Exception for translating sgf game tree to own GoGame model
+    '''
+    pass
+
 class SgfParser(BaseObject):
     nodeIndex = 0
 # constructors
@@ -39,7 +58,7 @@ class SgfParser(BaseObject):
         #1
         rootNode = self._parse_game_tree()
         #2 and #3
-        self._working_game = GoGame()
+        self._init_go_game()
         self._fill_up_game(rootNode)
         return self._working_game
 
@@ -50,6 +69,20 @@ class SgfParser(BaseObject):
         return ""
 
 # private methods / Go Game related
+    def _init_go_game(self):
+        game = GoGame()
+        game.format = PROP_VALUE_FILE_FORMAT
+        game.app_name = ""
+        game.app_version = 0
+        game.charset = ""
+        game.style = PROP_VALUE_STYLE_CHILDREN + PROP_VALUE_STYLE_MARK
+        boardSize = BoardSize()
+        boardSize.col = PROP_VALUE_BOARD_SIZE_GO
+        boardSize.row = PROP_VALUE_BOARD_SIZE_GO
+        game.size = boardSize
+        game.game = PROP_VALUE_GAME_GO
+        self._working_game = game
+
     def _fill_up_game(self,rootNode):
         # basicly travel all nodes of all game trees
         #     and extract property values from nodes to fill up game info
@@ -64,6 +97,7 @@ class SgfParser(BaseObject):
         #     unluckily seems it's not easy to get attribute name as string
         kifuInfo = self._working_game.kifuInfo
         gameInfo = self._working_game.info
+        settings = self._working_game.settings
         for prop in gameInfoNode.properties:
             ident = prop.ident
             values = prop.values
@@ -148,9 +182,13 @@ class SgfParser(BaseObject):
                     boardSize.col = int(simpleValue)
                     boardSize.row = int(simpleValue)
                 kifuInfo.size = boardSize
+            elif ident == PROP_FG:
+                settings.figure_options = int(simpleValue)
+            elif ident == PROP_PM:
+                settings.print_mode = int(simpleValue)
             else:
                 # unrecognized property ident
-                Exception("game info fail: unrecognized prop ident ", ident)
+                raise SgfTranslateException("unrecognized prop ident " + ident)
 
 # private methods / Sgf models parsing
     def _parse_game_tree(self):
@@ -266,7 +304,7 @@ class SgfParser(BaseObject):
             ctxBoundPos = self._cur_pos + 10
             if ctxBoundPos > len(self._working_sgf):
                 ctxBoundPos = len(self._working_sgf)
-            raise Exception("sgf parsing failed: at %d, expect '%s', provided '%s', context = '...%s'" %\
+            raise SgfParseException("sgf parsing failed: at %d, expect '%s', provided '%s', context = '...%s'" %\
                                 (self._cur_pos,\
                                 char,\
                                 self._working_sgf[self._cur_pos],\
