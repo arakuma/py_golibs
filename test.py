@@ -37,12 +37,10 @@ def main():
         game.from_sgf(open(test_sgf_file).read())
         print game.info.event,game.info.black_player_name,game.info.white_player_name,\
             game.kifu_info.app_name,game.kifu_info.app_version
-        game.next();
-        game.next();
-        game.next();
-        game.next();
-        game.next();
-        game.previous();
+        for i in range(0,30):
+            game.next();
+        for i in range(0,30):
+            game.previous();
     except (SgfParseException,SgfTranslateException),ex:
         print "Sgf exception: ",ex
 

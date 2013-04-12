@@ -192,6 +192,7 @@ class GoGame(BaseObject):
         # basicly travel all nodes of all game trees
         #     and extract properties from nodes to fill up game models
         walkingNode = node
+        currentAction = rootAction
         # sgf.node <-> gogame.action
         while walkingNode is not None:
             #print walkingNode.properties[0].ident + "[" + walkingNode.properties[0].values[0].valueA + "],",
@@ -201,6 +202,10 @@ class GoGame(BaseObject):
                 # link up the root action to the new one
                 walkingAction.previous = rootAction
                 rootAction.next = walkingAction
+            else:
+                walkingAction.previous = currentAction
+                currentAction.next = walkingAction
+                currentAction = walkingAction
             if len(walkingNode.variations) > 0:
                 # variations here is treated with recursion
                 for variationRootNode in walkingNode.variations:
