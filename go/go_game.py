@@ -34,6 +34,10 @@ class GameActionObserver:
     def mark_removed(self, mark):
         pass
 
+# constants
+PROP_IDENTS_MOVE = [PROP_B, PROP_W]
+PROP_IDENTS_SETUP = [PROP_AB, PROP_AW, PROP_AE, PROP_VW, PROP_PL]
+
 # Models / Go game itself
 class GoGame(BaseObject):
     '''A game model of Go'''
@@ -68,6 +72,22 @@ class GoGame(BaseObject):
         Convert the game back to sgf root node and pass it to sgf parser
         '''
         return self.sgf_parser.write(self._get_sgf_root_node())
+
+    def next(self):
+        '''
+        Go to the next action, corresponding events will be triggered
+        '''
+        pass
+
+    def previous(self):
+        '''
+        Go back to previous action, corresponding events will be triggered
+        '''
+        pass
+
+# private methods / Game actions
+    def _add_action(self, action):
+        pass
 
 # private methods / Game info and actions from/to sgf
     def _get_sgf_root_node(self):
@@ -206,47 +226,53 @@ class GoGame(BaseObject):
                 walkingNode = walkingNode.next
 
     def _get_action_from_node(self,node):
+        '''
+        Convert one sgf node to a single action of go game
+        '''
+        action = MoveAction()
         # Will B/W/VW props always be the first one of the node?
         # Actually no...but we must be sure action is constructed in time before
         #     any other props are translated to attribute of it.
-        action = None
-        move = None
-        stones = []
+        # So the first time of ieteration is for identifying the action type
+        for prop in node.properties:
+            if prop.ident in PROP_IDENTS_MOVE:
+                action = MoveAction()
+            elif prop.ident in PROP_IDENTS_SETUP:
+                action = SetupAction()
+        # OK, take the second time of properties iteration for translating
         for prop in node.properties:
             ident = prop.ident
+            values = prop.values
+            simpleValue = values[0].valueA
+            # move
             if ident == PROP_B or ident == PROP_W:
-                pass
-            elif ident == PROP_BL or ident == PROP_WL:
-                pass
-            elif ident == PROP_AB or ident == PROP_AW or ident == PROP_AE:
-                pass
-            elif ident == PROP_PL:
-                pass
+                if ident == PROP_B:
+                    action.move.stone = GAME_STONE_BLACK
+                elif ident == PROP_W:
+                    action.move.stone = GAME_STONE_WHITE
+                action.move.position = self._coord_from_lc_letters(simpleValue)
+            elif ident == PROP_BL:
+                action.move.time_left_black = float(simpleValue)
+            elif ident == PROP_WL:
+                action.move.time_left_white = float(simpleValue)
             elif ident == PROP_BM:
-                pass
+                action.move.is_bad = bool(simpleValue)
             elif ident == PROP_DO:
-                pass
-            elif ident == PROP_PL:
-                pass
+                action.move.is_doubtful = bool(simpleValue)
             elif ident == PROP_IT:
-                pass
+                action.move.is_interesting = bool(simpleValue)
             elif ident == PROP_KO:
-                pass
+                action.move.is_ko = bool(simpleValue)
             elif ident == PROP_MN:
-                pass
+                action.move.number = int(simpleValue)
             elif ident == PROP_OB:
-                pass
+                action.move.moves_left_black = int(simpleValue)
             elif ident == PROP_OW:
-                pass
+                action.move.moves_left_white = int(simpleValue)
             elif ident == PROP_TE:
-                pass
-            elif ident == PROP_AR:
-                pass
+                action.move.is_tejitsu = bool(simpleValue)
+            # mutual
             elif ident == PROP_C:
-                pass
-            elif ident == PROP_DD:
-                pass
-            elif ident == PROP_FG:
                 pass
             elif ident == PROP_GB:
                 pass
@@ -256,19 +282,67 @@ class GoGame(BaseObject):
                 pass
             elif ident == PROP_HO:
                 pass
+            elif ident == PROP_FG:
+                pass
+            elif ident == PROP_DM:
+                pass
+            # marks
+            elif ident == PROP_AR:
+                for value in values:
+                    arrowMark = Mark(GAME_MARK_ARROW,\
+                        self._coord_from_lc_letters(value.valueA),\
+                        self._coord_from_lc_letters(value.valueB))
+                    action.marks.append(arrowMark)
+            elif ident == PROP_DD:
+                if len(simpleValue) == 0:
+                    action.marks.append(Mark(GAME_MARK_UNDIM, None))
+                else:
+                    expanedValues = self._expand_composed_value(prop)
+                    for value in values:
+                        dimMark = Mark(GAME_MARK_DIM,\
+                            self._coord_from_lc_letters(value.valueA))
+                        action.marks.append(dimMark)
             elif ident == PROP_CR:
-                pass
+                for value in values:
+                    circleMark = Mark(GAME_MARK_CIRCLE,\
+                        self._coord_from_lc_letters(value.valueA))
+                    action.marks.append(circleMark)
             elif ident == PROP_LB:
-                pass
+                for value in values:
+                    labelMark = Mark(GAME_MARK_LABEL,\
+                        self._coord_from_lc_letters(value.valueA),\
+                        value.valueB)
+                    action.marks.append(labelMark)
             elif ident == PROP_LN:
-                pass
+                for value in values:
+                    lineMark = Mark(GAME_MARK_LINE,\
+                        self._coord_from_lc_letters(value.valueA),\
+                        self._coord_from_lc_letters(value.valueB))
+                    action.marks.append(lineMark)
             elif ident == PROP_MA:
-                pass
+                for value in values:
+                    xMark = Mark(GAME_MARK_X,\
+                        self._coord_from_lc_letters(value.valueA))
+                    action.marks.append(xMark)
             elif ident == PROP_SL:
-                pass
+                for value in values:
+                    selectedMark = Mark(GAME_MARK_SELECTED,\
+                        self._coord_from_lc_letters(value.valueA))
+                    action.marks.append(selectedMark)
             elif ident == PROP_SQ:
-                pass
+                for value in values:
+                    squareMark = Mark(GAME_MARK_SQUARE,\
+                        self._coord_from_lc_letters(value.valueA))
+                    action.marks.append(squareMark)
             elif ident == PROP_TR:
+                for value in values:
+                    triangleMark = Mark(GAME_MARK_SQUARE,\
+                        self._coord_from_lc_letters(value.valueA))
+                    action.marks.append(triangleMark)
+            # stones setup
+            elif ident == PROP_AB or ident == PROP_AW or ident == PROP_AE:
+                pass
+            elif ident == PROP_PL:
                 pass
             elif ident == PROP_UC:
                 pass
@@ -308,3 +382,22 @@ class GoGame(BaseObject):
         '''
         baseCoordValue = ord('a')
         return chr(coord.x + baseCoordValue) + chr(coord.y + baseCoordValue)
+
+    def _expand_composed_value(self,prop):
+        expandedValues = []
+        '''
+        Expand any composed value likes [ca:ce] to [ca][cb][cc][cd][ce]
+        for DD and VW
+        '''
+        for value in prop.values:
+            if len(value.valueB) == 0:
+                expandedValues.append(value)
+            else:
+                vs,ve = value.valueA, value.valueB
+                for i in range(ord(vs[0]),ord(ve[0]) + 1):
+                    for j in range(ord(vs[1]),ord(ve[1]) + 1):
+                        newValue = SgfPropertyValue()
+                        newValue.valueA = chr(i)+chr(j)
+                        expandedValues.append(newValue)
+        return expandedValues
+

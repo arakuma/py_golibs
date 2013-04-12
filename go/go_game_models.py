@@ -23,27 +23,32 @@ class FigureInfo(BaseObject):
         self.name = name
 
 class Mark(BaseObject):
-    def __init__(self, markType, fromX, fromY, toX = 0, toY = 0, text = ""):
+    def __init__(self, markType, coordFrom, coordTo = None, text = ""):
         self.type     = markType
-        self.from_pos = Coordinate(fromX,fromY)
-        self.to_pos   = Coordinate(toX,toY)
+        self.from_pos = coordFrom
+        self.to_pos   = coordTo
         self.text     = text
 
 class Stone(BaseObject):
-    def __init__(self, color):
+    def __init__(self, color, coord):
         self.color = color # GAME_STONE_BASE
+        self.coord = coord
 
 class Move(BaseObject):
-    def __init__(self, stone, x, y, comment = "", figure = None):
-        self.number        = 0
-        self.stone         = stone
-        self.position      = Coordinate(x,y)
-        self.comment       = ""
-        self.figure        = figure
-        self.value         = 0
-        self.is_black_good = False
-        self.is_white_good = False
-        self.is_hotspot    = False
+    def __init__(self, stone = None, figure = None):
+        self.number         = 0
+        self.stone          = stone
+        self.figure         = figure
+        self.value          = 0
+        self.is_bad         = False
+        self.is_doubtful    = False
+        self.is_interesting = False
+        self.is_ko          = False
+        self.is_tejitsu     = False
+        self.time_left_black      = 0.0
+        self.time_left_white      = 0.0
+        self.moves_left_black     = 0
+        self.moves_left_white     = 0
 
 # Models / Go game actions
 class Action(BaseObject):
@@ -53,29 +58,38 @@ class Action(BaseObject):
     Basically an Action is converted from and only from one SgfNode
         and all properties in SgfNode will be translated to attributes of Action
     '''
-    def __init__(self, name, marks = None):
-        self.name     = name
-        self.marks    = marks
+    def __init__(self, name = ""):
+        self.name           = name
+        self.marks          = []
         # Action should be a double-linked node because it should be possible to
         #     go forward/wind back during review
-        self.previous = None
-        self.next     = None
+        self.previous       = None
+        self.next           = None
+        self.variations     = []    # list of Actions
+        self.comment        = ""
+        self.is_hotspot     = False
+        self.is_black_good  = False
+        self.is_white_good  = False
+        self.is_event       = False
 
 class MoveAction(Action):
     '''
     For prop B, W
     '''
-    def __init__(self, name, move, marks = None):
-        super.__init__(name,marks)
-        self.move = move
+    def __init__(self, name = "", move = None):
+        super.__init__(name)
+        self.move = Move()
+        if self.move is None: move = Move()
 
-class StoneAction(Action):
+class SetupAction(Action):
     '''
-    For prop VW, AB, AW, AE
+    For prop VW, AB, AW, AE, PL
     '''
-    def __init__(self, name, stones, marks = None):
-        super.__init__(name,marks)
+    def __init__(self, name = "", stones = None):
+        super.__init__(name)
         self.stones = stones
+        self.player_to_move = GAME_STONE_BASE
+        if self.stones is None: self.stones = []
 
 # Models / Go Game attributes
 class GoGameSettings(BaseObject):
