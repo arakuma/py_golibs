@@ -36,13 +36,13 @@ class Stone(BaseObject):
 
 class Move(BaseObject):
     def __init__(self, stone = None):
-        self.number         = 0
-        self.stone          = stone
-        self.is_bad         = False
-        self.is_doubtful    = False
-        self.is_interesting = False
-        self.is_ko          = False
-        self.is_tejitsu     = False
+        self.number               = 0
+        self.stone                = stone
+        self.is_bad               = False
+        self.is_doubtful          = False
+        self.is_interesting       = False
+        self.is_ko                = False
+        self.is_tejitsu           = False
         self.time_left_black      = 0.0
         self.time_left_white      = 0.0
         self.moves_left_black     = 0
@@ -72,25 +72,25 @@ class Action(BaseObject):
         self.is_unclear     = False
         self.value          = 0
         self.figure         = None
+        self.view_points    = []
 
 class MoveAction(Action):
     '''
     For prop B, W
     '''
     def __init__(self, name = "", move = None):
-        super.__init__(name)
+        Action.__init__(self,name)
         self.move = Move()
         if self.move is None: move = Move()
 
 class SetupAction(Action):
     '''
-    For prop VW, AB, AW, AE, PL
+    For prop AB, AW, AE, PL
     '''
     def __init__(self, name = "", stones = None):
-        super.__init__(name)
+        Action.__init__(self,name)
         self.stones         = stones
         self.player_to_move = GAME_STONE_BASE
-        self.is_view        = False
         if self.stones is None: self.stones = []
 
 # Models / Go Game attributes

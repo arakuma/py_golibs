@@ -36,17 +36,20 @@ class GameActionObserver:
 
 # constants
 PROP_IDENTS_MOVE = [PROP_B, PROP_W]
-PROP_IDENTS_SETUP = [PROP_AB, PROP_AW, PROP_AE, PROP_VW, PROP_PL]
+PROP_IDENTS_SETUP = [PROP_AB, PROP_AW, PROP_AE, PROP_PL]
 
 # Models / Go game itself
 class GoGame(BaseObject):
     '''A game model of Go'''
 # constructor
-    def __init__(self):
-        self.kifu_info  = KifuInfo()
-        self.info       = GoGameInfo()
-        self.settings   = GoGameSettings()
-        self.sgf_parser = SgfParser()
+    def __init__(self, observer = GameActionObserver()):
+        self.kifu_info       = KifuInfo()
+        self.info            = GoGameInfo()
+        self.settings        = GoGameSettings()
+        self.sgf_parser      = SgfParser()
+        self._observer       = observer
+        self._root_action    = Action()
+        self._current_action = self._root_action
         self._init_default_info()
 
 # public methods
@@ -65,7 +68,7 @@ class GoGame(BaseObject):
         #2
         self._process_game_info(rootNode)
         #3
-        self._process_game_actions(rootNode)
+        self._process_game_actions(self._root_action, rootNode.next)
 
     def to_sgf(self):
         '''
@@ -77,21 +80,26 @@ class GoGame(BaseObject):
         '''
         Go to the next action, corresponding events will be triggered
         '''
-        pass
+        _current_action = _current_action.next
+        if _current_action is MoveAction:
+            pass
+        elif _current_action is SetupAction:
+            pass
 
     def previous(self):
         '''
         Go back to previous action, corresponding events will be triggered
         '''
-        pass
-
-# private methods / Game actions
-    def _add_action(self, action):
-        pass
+        _current_action = _current_action.next
+        if _current_action is MoveAction:
+            pass
+        elif _current_action is SetupAction:
+            pass
 
 # private methods / Game info and actions from/to sgf
     def _get_sgf_root_node(self):
-        return None
+        '''todo'''
+        pass
 
     def _init_default_info(self):
         self.kifu_info.format = PROP_VALUE_FILE_FORMAT
@@ -205,31 +213,34 @@ class GoGame(BaseObject):
                 # unrecognized property ident
                 raise SgfTranslateException("unrecognized root prop ident " + ident)
 
-    def _process_game_actions(self,node):
+    def _process_game_actions(self,rootAction,node):
         # basicly travel all nodes of all game trees
         #     and extract properties from nodes to fill up game models
         walkingNode = node
         # sgf.node <-> gogame.action
         while walkingNode is not None:
-            print walkingNode.properties[0].ident + "[" + walkingNode.properties[0].values[0].valueA + "],",
-            # node properties
-            if not node.isRoot:
-                action = self._get_action_from_node(walkingNode)
+            #print walkingNode.properties[0].ident + "[" + walkingNode.properties[0].values[0].valueA + "],",
+            # node with properties translates to Action
+            walkingAction = self._action_from_node(walkingNode)
+            if rootAction.next is None:
+                # link up the root action to the new one
+                walkingAction.previous = rootAction
+                rootAction.next = walkingAction
             if len(walkingNode.variations) > 0:
                 # variations here is treated with recursion
                 for variationRootNode in walkingNode.variations:
-                    self._process_game_actions(variationRootNode)
+                    self._process_game_actions(walkingAction,variationRootNode)
                 # and in this case walking node will no necessary to be here
                 #     any longer
                 walkingNode = None
             else:
                 walkingNode = walkingNode.next
 
-    def _get_action_from_node(self,node):
+    def _action_from_node(self,node):
         '''
         Convert one sgf node to a single action of go game
         '''
-        action = SetupAction()
+        action = None
         # Will B/W/VW props always be the first one of the node?
         # Actually no...but we must be sure action is constructed in time before
         #     any other props are translated to attribute of it.
@@ -237,8 +248,10 @@ class GoGame(BaseObject):
         for prop in node.properties:
             if prop.ident in PROP_IDENTS_MOVE:
                 action = MoveAction()
+                break
             elif prop.ident in PROP_IDENTS_SETUP:
                 action = SetupAction()
+                break
         # OK, take the second time of properties iteration for translating
         for prop in node.properties:
             ident = prop.ident
@@ -288,14 +301,7 @@ class GoGame(BaseObject):
                     action.player_to_move = GAME_STONE_BLACK
                 elif simpleValue == PROP_VALUE_WHITE:
                     action.player_to_move = GAME_STONE_WHITE
-            elif ident == PROP_VW:
-                action.is_view = True
-                expanedValues = self._expand_composed_value(prop)
-                for value in values:
-                    viewPos = Stone(GAME_STONE_EMPTY,\
-                        self._coord_from_lc_letters(value.valueA))
-                    action.stones.append(viewPos)
-            # mutual
+            # mutual, annotations
             elif ident == PROP_C:
                 action.comment = simpleValue
             elif ident == PROP_GB:
@@ -314,7 +320,16 @@ class GoGame(BaseObject):
                 action.name = simpleValue
             elif ident == PROP_UC:
                 action.is_unclear = bool(simpleValue)
-            # marks
+            elif ident == PROP_VW:
+                if len(simpleValue) == 0:  # VW[]
+                    pass
+                else:
+                    expanedValues = self._expand_composed_value(prop)
+                    for value in values:
+                        viewPos = Stone(GAME_STONE_EMPTY,\
+                            self._coord_from_lc_letters(value.valueA))
+                        action.view_points.append(viewPos)
+            # mutual, marks
             elif ident == PROP_AR:
                 for value in values:
                     arrowMark = Mark(GAME_MARK_ARROW,\
@@ -322,7 +337,7 @@ class GoGame(BaseObject):
                         self._coord_from_lc_letters(value.valueB))
                     action.marks.append(arrowMark)
             elif ident == PROP_DD:
-                if len(simpleValue) == 0:
+                if len(simpleValue) == 0:  # DD[]
                     action.marks.append(Mark(GAME_MARK_UNDIM, None))
                 else:
                     expanedValues = self._expand_composed_value(prop)
@@ -386,9 +401,7 @@ class GoGame(BaseObject):
         charX, charY = value[0],value[1]
         if charX.isupper() or charY.isupper():
             raise SgfPropValueException("not supported upper case letters for coord")
-        coord = Coordinate()
-        coord.x = ord(charX) - baseCoordValue
-        coord.y = ord(charY) - baseCoordValue
+        coord = Coordinate(ord(charX) - baseCoordValue,ord(charY) - baseCoordValue)
         return coord
 
     def _lc_letters_from_coord(self,coord):

@@ -20,7 +20,6 @@ class SgfNode(BaseObject):
         self.variations = []    # if variations are available,
                                 #    self.next will be variations[0]
         self.properties = []    # list of SgfProperty
-        self.is_root    = False
 
 class SgfProperty(BaseObject):
     '''Property of sgf format'''
