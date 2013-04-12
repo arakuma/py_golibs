@@ -12,7 +12,6 @@
 
 from common.common_defs import *
 from common.utility import BaseObject
-from go.go_game import *
 from sgf_models import *
 from string import whitespace
 
@@ -39,238 +38,25 @@ class SgfParser(BaseObject):
     nodeIndex = 0
 # constructors
     def __init__(self):
-        self._working_game = GoGame()
         self._cur_pos = 0
         self._working_sgf = ""
 
 # public methods
     def read(self,sgf_text):
         '''
-        Read in sgf format text and parse it to a GoGame model
-        This will be done in three phases:
-            1. Parse the sgf text to the game tree collection
-            2. Visit all tree nodes and fill up game infomation, basically the
-                root node will be read and properties of it are used
-            3. Convert sgf models to go game models for upper level uses,
-                here we should travel game trees and read out all other nodes,
-                fill up go game models with node properties and so on
+        Read in sgf format text and return the root node of all game trees
         '''
         SgfParser.nodeIndex = 0
         self._working_sgf = sgf_text
-        #1
         rootNode = self._parse_game_tree()
-        #2
-        self._init_go_game()
-        self._process_game_info(rootNode)
-        #3
-        self._process_game_actions(rootNode)
-        return self._working_game
+        rootNode.is_root = True
+        return rootNode
 
-    def write(self,game):
+    def write(self,rootNode):
         '''
         Parse the GoGame model reversely to sgf_text
         '''
         return ""
-
-# private methods / Go Game related
-    def _init_go_game(self):
-        game = GoGame()
-        game.kifuInfo.format = PROP_VALUE_FILE_FORMAT
-        game.kifuInfo.app_name = ""
-        game.kifuInfo.app_version = 0
-        game.kifuInfo.charset = ""
-        game.kifuInfo.style = PROP_VALUE_STYLE_CHILDREN + PROP_VALUE_STYLE_MARK
-        boardSize = BoardSize()
-        boardSize.col = PROP_VALUE_BOARD_SIZE_GO
-        boardSize.row = PROP_VALUE_BOARD_SIZE_GO
-        game.kifuInfo.size = boardSize
-        game.kifuInfo.game = PROP_VALUE_GAME_GO
-        game.settings.print_mode = PROP_VALUE_PRINT_MODE_AS_IS
-        self._working_game = game
-
-    def _process_game_info(self,rootNode):
-        # I was thinking of building a dict for propIdent-game.attribute
-        #     to make it look nicer than the if-else statements
-        #     unluckily seems it's not easy to get attribute name as string
-        kifuInfo = self._working_game.kifuInfo
-        gameInfo = self._working_game.info
-        settings = self._working_game.settings
-        for prop in rootNode.properties:
-            ident = prop.ident
-            values = prop.values
-            valuePair = values[0]
-            simpleValue = valuePair.valueA
-            if ident == PROP_PB:
-                gameInfo.black_player_name = simpleValue
-            elif ident == PROP_BR:
-                gameInfo.black_player_rank = simpleValue
-            elif ident == PROP_BT:
-                gameInfo.black_team = simpleValue
-            elif ident == PROP_PW:
-                gameInfo.white_player_name = simpleValue
-            elif ident == PROP_WR:
-                gameInfo.white_player_rank = simpleValue
-            elif ident == PROP_WT:
-                gameInfo.white_team = simpleValue
-            elif ident == PROP_RE:
-                if simpleValue == PROP_VALUE_RESULT_DRAW:
-                    gameInfo.result.type = GAME_RESULT_DRAW
-                else:
-                    m = re.match(PROP_VALUE_RESULT_RESIGN,simpleValue)
-                    if m is not None:
-                        gameInfo.result.type = GAME_RESULT_RESIGNS
-                        if m.group(1) == PROP_VALUE_BLACK:
-                            gameInfo.result.winning_party = GAME_STONE_WHITE
-                        else:
-                            gameInfo.result.winning_party = GAME_STONE_BLACK
-                    else:
-                        m = re.match(PROP_VALUE_RESULT_WIN)
-                        if m is not None:
-                            gameInfo.result.type = GAME_RESULT_WINS
-                            gameInfo.result.winning_party = m.group(1)
-                            gameInfo.result.score = float(group(2))
-            elif ident == PROP_KM:
-                gameInfo.komi = float(simpleValue)
-            elif ident == PROP_HA:
-                gameInfo.handicap = int(simpleValue)
-            elif ident == PROP_TM:
-                gameInfo.time = simpleValue
-            elif ident == PROP_DT:
-                gameInfo.date = simpleValue
-            elif ident == PROP_EV:
-                gameInfo.event = simpleValue
-            elif ident == PROP_RO:
-                gameInfo.round = simpleValue
-            elif ident == PROP_PL:
-                gameInfo.place = simpleValue
-            elif ident == PROP_RU:
-                gameInfo.rules = simpleValue
-            elif ident == PROP_GN:
-                gameInfo.game_name = simpleValuem
-            elif ident == PROP_ON:
-                gameInfo.opening = simpleValue
-            elif ident == PROP_GC:
-                gameInfo.game_comment = simpleValue
-            elif ident == PROP_SO:
-                gameInfo.source = simpleValue
-            elif ident == PROP_US:
-                gameInfo.user = simpleValue
-            elif ident == PROP_AN:
-                gameInfo.annotation = simpleValue
-            elif ident == PROP_CP:
-                gameInfo.copyright = simpleValue
-            elif ident == PROP_AP:
-                kifuInfo.app_name = valuePair.valueA
-                kifuInfo.app_version = float(valuePair.valueB)
-            elif ident == PROP_CA:
-                kifuInfo.charset = simpleValue
-            elif ident == PROP_FF:
-                kifuInfo.format = int(simpleValue)
-            elif ident == PROP_GM:
-                kifuInfo.game = int(simpleValue)
-            elif ident == PROP_ST:
-                kifuInfo.game = int(simpleValue)
-            elif ident == PROP_SZ:
-                boardSize = BoardSize()
-                if len(valuePair.valueB) > 0:
-                    boardSize.col = int(valuePair.valueA)
-                    boardSize.row = int(valuePair.valueB)
-                else:
-                    boardSize.col = int(simpleValue)
-                    boardSize.row = int(simpleValue)
-                kifuInfo.size = boardSize
-            elif ident == PROP_FG:
-                settings.figure_options = int(simpleValue)
-            elif ident == PROP_PM:
-                settings.print_mode = int(simpleValue)
-            else:
-                # unrecognized property ident
-                raise SgfTranslateException("unrecognized prop ident " + ident)
-
-    def _process_game_actions(self,rootNode):
-        # basicly travel all nodes of all game trees
-        #     and extract properties from nodes to fill up game models
-        walkingNode = rootNode
-        # sgf.node <-> gogame.action
-        while walkingNode is not None:
-            print walkingNode.properties[0].ident + "[" + walkingNode.properties[0].values[0].valueA + "],",
-            # node properties
-            action = self._get_action_from_node(walkingNode)
-            if len(walkingNode.variations) > 0:
-                # variations here is treated with recursion
-                for variationRootNode in walkingNode.variations:
-                    self._process_game_actions(variationRootNode)
-                walkingNode = None
-            else:
-                walkingNode = walkingNode.next
-
-    def _get_action_from_node(self,node):
-        for prop in node.properties:
-            ident = prop.ident
-            if ident == PROP_B or ident == PROP_W:
-                pass
-            elif ident == PROP_BL or ident == PROP_WL:
-                pass
-            elif ident == PROP_AB or ident == PROP_AW or ident == PROP_AW:
-                pass
-            elif ident == PROP_PL:
-                pass
-            elif ident == PROP_BM:
-                pass
-            elif ident == PROP_DO:
-                pass
-            elif ident == PROP_PL:
-                pass
-            elif ident == PROP_IT:
-                pass
-            elif ident == PROP_KO:
-                pass
-            elif ident == PROP_MN:
-                pass
-            elif ident == PROP_OB:
-                pass
-            elif ident == PROP_OW:
-                pass
-            elif ident == PROP_TE:
-                pass
-            elif ident == PROP_AR:
-                pass
-            elif ident == PROP_C:
-                pass
-            elif ident == PROP_DD:
-                pass
-            elif ident == PROP_FG:
-                pass
-            elif ident == PROP_GB:
-                pass
-            elif ident == PROP_GW:
-                pass
-            elif ident == PROP_V:
-                pass
-            elif ident == PROP_HO:
-                pass
-            elif ident == PROP_CR:
-                pass
-            elif ident == PROP_LB:
-                pass
-            elif ident == PROP_LN:
-                pass
-            elif ident == PROP_MA:
-                pass
-            elif ident == PROP_SL:
-                pass
-            elif ident == PROP_SQ:
-                pass
-            elif ident == PROP_TR:
-                pass
-            elif ident == PROP_UC:
-                pass
-            elif ident == PROP_PM:
-                pass
-            elif ident == PROP_N:
-                pass
-            elif ident == PROP_VW:
-                pass
 
 # private methods / Sgf models parsing
     def _parse_game_tree(self):

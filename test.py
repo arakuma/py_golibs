@@ -11,16 +11,15 @@
 #-------------------------------------------------------------------------------
 
 from go.go_game import *
-from sgf.sgf_parser import *
 
 test_sgf_file = "test.sgf"
 
 def main():
-    sgfParser = SgfParser()
     try:
-        game = sgfParser.read(open(test_sgf_file).read())
+        game = GoGame()
+        game.from_sgf(open(test_sgf_file).read())
         print game.info.event,game.info.black_player_name,game.info.white_player_name,\
-            game.kifuInfo.app_name,game.kifuInfo.app_version
+            game.kifu_info.app_name,game.kifu_info.app_version
     except (SgfParseException,SgfTranslateException),ex:
         print "Sgf exception: ",ex
 
