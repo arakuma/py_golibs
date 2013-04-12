@@ -200,6 +200,7 @@ class SgfParser(BaseObject):
                 # variations here is treated with recursion
                 for variationRootNode in walkingNode.variations:
                     self._process_game_actions(variationRootNode)
+                walkingNode = None
             else:
                 walkingNode = walkingNode.next
 

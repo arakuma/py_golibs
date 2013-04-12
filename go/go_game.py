@@ -56,6 +56,7 @@ class Stone(BaseObject):
 
 class Move(BaseObject):
     def __init__(self, stone, x, y, comment = "", figure = None):
+        self.number        = 0
         self.stone         = stone
         self.position      = Coordinate(x,y)
         self.comment       = ""
@@ -82,11 +83,17 @@ class Action(BaseObject):
         self.next     = None
 
 class MoveAction(Action):
+    '''
+    For prop B, W
+    '''
     def __init__(self, name, move, marks = None):
         super.__init__(name,marks)
         self.move = move
 
 class StoneAction(Action):
+    '''
+    For prop VW, AB, AW, AE
+    '''
     def __init__(self, name, stones, marks = None):
         super.__init__(name,marks)
         self.stones = stones
