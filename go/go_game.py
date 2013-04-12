@@ -37,7 +37,6 @@ class GameActionObserver:
 # Models / Go game itself
 class GoGame(BaseObject):
     '''A game model of Go'''
-
 # constructor
     def __init__(self):
         self.kifu_info  = KifuInfo()
@@ -192,7 +191,7 @@ class GoGame(BaseObject):
         walkingNode = node
         # sgf.node <-> gogame.action
         while walkingNode is not None:
-            #print walkingNode.properties[0].ident + "[" + walkingNode.properties[0].values[0].valueA + "],",
+            print walkingNode.properties[0].ident + "[" + walkingNode.properties[0].values[0].valueA + "],",
             # node properties
             if not node.isRoot:
                 action = self._get_action_from_node(walkingNode)
@@ -211,13 +210,15 @@ class GoGame(BaseObject):
         # Actually no...but we must be sure action is constructed in time before
         #     any other props are translated to attribute of it.
         action = None
+        move = None
+        stones = []
         for prop in node.properties:
             ident = prop.ident
             if ident == PROP_B or ident == PROP_W:
                 pass
             elif ident == PROP_BL or ident == PROP_WL:
                 pass
-            elif ident == PROP_AB or ident == PROP_AW or ident == PROP_AW:
+            elif ident == PROP_AB or ident == PROP_AW or ident == PROP_AE:
                 pass
             elif ident == PROP_PL:
                 pass
@@ -279,3 +280,31 @@ class GoGame(BaseObject):
                 pass
             else:
                 raise SgfTranslateException("unrecognized action prop ident " + ident)
+        return action
+
+#private methods / helpers
+    def _coord_from_lc_letters(self,value):
+        '''
+        Convert coord value to Coordinate
+        See http://www.red-bean.com/sgf/go.html
+        Now only lower case letters are supported
+            which lead to max board size to 26*26
+        '''
+        if len(value) == 0 or value == PROP_VALUE_MOVE_PASS_COORD:
+            return None
+
+        baseCoordValue = ord('a')
+        charX, charY = value[0],value[1]
+        if charX.isupper() or charY.isupper():
+            raise SgfPropValueException("not supported upper case letters for coord")
+        coord = Coordinate()
+        coord.x = ord(charX) - baseCoordValue
+        coord.y = ord(charY) - baseCoordValue
+        return coord
+
+    def _lc_letters_from_coord(self,coord):
+        '''
+        Convert Coordinate back to lower case letters
+        '''
+        baseCoordValue = ord('a')
+        return chr(coord.x + baseCoordValue) + chr(coord.y + baseCoordValue)

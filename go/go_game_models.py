@@ -77,7 +77,6 @@ class StoneAction(Action):
         super.__init__(name,marks)
         self.stones = stones
 
-
 # Models / Go Game attributes
 class GoGameSettings(BaseObject):
     def __init__(self):

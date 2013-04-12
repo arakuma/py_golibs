@@ -34,6 +34,12 @@ class SgfTranslateException(Exception):
     '''
     pass
 
+class SgfPropValueException(Exception):
+    '''
+    Exception for unsupported sgf value
+    '''
+    pass
+
 class SgfParser(BaseObject):
     nodeIndex = 0
 # constructors
