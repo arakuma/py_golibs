@@ -11,6 +11,31 @@
 from common.utility import BaseObject
 from go_defs import *
 
+# Models / Game observer
+class GameActionObserver:
+    '''
+    Interface for being notified about all game actions:
+        1.stone add/remove
+        2.action performed
+        3.mark add
+    '''
+    def move_performed(self, move):
+        pass
+    def variation_available(self, moves):
+        pass
+    def stone_added(self, stone):
+        pass
+    def stone_removed(self, stone):
+        pass
+    def mark_added(self, mark):
+        pass
+    def mark_removed(self, mark):
+        pass
+    def view_changed(self, points):
+        pass
+    def view_restored(self):
+        pass
+
 # Models / Basic structures
 class Coordinate(BaseObject):
     def __init__(self, x, y):
@@ -56,7 +81,8 @@ class Action(BaseObject):
     Basically an Action is converted from and only from one SgfNode
         and all properties in SgfNode will be translated to attributes of Action
     '''
-    def __init__(self, name = ""):
+    def __init__(self, observer, name = ""):
+        self._observer      = observer
         self.name           = name
         self.marks          = []
         # Action should be a double-linked node because it should be possible to
@@ -73,25 +99,48 @@ class Action(BaseObject):
         self.value          = 0
         self.figure         = None
         self.view_points    = []
+    def do(self):
+        self._observer.view_changed(self.view_points)
+        for mark in self.marks:
+            self._observer.mark_added(mark)
+        if len(self.variations) > 0:
+            self._observer.variation_available(self.variations)
+    def undo(self):
+        for mark in self.marks:
+            self._observer.mark_removed(mark)
 
 class MoveAction(Action):
     '''
     For prop B, W
     '''
-    def __init__(self, name = "", move = None):
-        Action.__init__(self,name)
+    def __init__(self, observer, name = "", move = None):
+        Action.__init__(self,observer,name)
         self.move = Move()
         if self.move is None: move = Move()
+    def do(self):
+        Action.do(self)
+        self._observer.move_performed(self.move)
+    def undo(self):
+        Action.undo(self)
+        self._observer.stone_removed(self.move.stone)
 
 class SetupAction(Action):
     '''
     For prop AB, AW, AE, PL
     '''
-    def __init__(self, name = "", stones = None):
-        Action.__init__(self,name)
+    def __init__(self, observer, name = "", stones = None):
+        Action.__init__(self,observer,name)
         self.stones         = stones
         self.player_to_move = GAME_STONE_BASE
         if self.stones is None: self.stones = []
+    def do(self):
+        Action.do(self)
+        for stone in self.stones:
+            _observer.stone_added(stone)
+    def undo(self):
+        Action.undo(self)
+        for stone in self.stones:
+            _observer.stone_removed(stone)
 
 # Models / Go Game attributes
 class GoGameSettings(BaseObject):

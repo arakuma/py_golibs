@@ -11,6 +11,7 @@
 #-------------------------------------------------------------------------------
 
 from go.go_game import *
+from go.go_game_models import GameActionObserver
 
 test_sgf_file = "test.sgf"
 
@@ -21,9 +22,9 @@ class GoGameEventTester(GameActionObserver):
         print "move_performed"
     def variation_available(self, moves):
         print "variation_available"
-    def stone_added(self, stone, coord):
+    def stone_added(self, stone):
         print "stone_added"
-    def stone_removed(self, stone, coord):
+    def stone_removed(self, stone):
         print "stone_removed"
     def mark_added(self, mark):
         print "mark_added"
@@ -36,6 +37,12 @@ def main():
         game.from_sgf(open(test_sgf_file).read())
         print game.info.event,game.info.black_player_name,game.info.white_player_name,\
             game.kifu_info.app_name,game.kifu_info.app_version
+        game.next();
+        game.next();
+        game.next();
+        game.next();
+        game.next();
+        game.previous();
     except (SgfParseException,SgfTranslateException),ex:
         print "Sgf exception: ",ex
 

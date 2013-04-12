@@ -13,27 +13,6 @@ from go_defs import *
 from go_game_models import *
 from sgf.sgf_parser import *
 
-# Models / Game observer
-class GameActionObserver:
-    '''
-    Interface for being notified about all game actions:
-        1.stone add/remove
-        2.action performed
-        3.mark add
-    '''
-    def move_performed(self, move):
-        pass
-    def variation_available(self, moves):
-        pass
-    def stone_added(self, stone, coord):
-        pass
-    def stone_removed(self, stone, coord):
-        pass
-    def mark_added(self, mark):
-        pass
-    def mark_removed(self, mark):
-        pass
-
 # constants
 PROP_IDENTS_MOVE = [PROP_B, PROP_W]
 PROP_IDENTS_SETUP = [PROP_AB, PROP_AW, PROP_AE, PROP_PL]
@@ -42,13 +21,13 @@ PROP_IDENTS_SETUP = [PROP_AB, PROP_AW, PROP_AE, PROP_PL]
 class GoGame(BaseObject):
     '''A game model of Go'''
 # constructor
-    def __init__(self, observer = GameActionObserver()):
+    def __init__(self, observer):
         self.kifu_info       = KifuInfo()
         self.info            = GoGameInfo()
         self.settings        = GoGameSettings()
         self.sgf_parser      = SgfParser()
         self._observer       = observer
-        self._root_action    = Action()
+        self._root_action    = Action(self._observer)
         self._current_action = self._root_action
         self._init_default_info()
 
@@ -80,21 +59,17 @@ class GoGame(BaseObject):
         '''
         Go to the next action, corresponding events will be triggered
         '''
-        _current_action = _current_action.next
-        if _current_action is MoveAction:
-            pass
-        elif _current_action is SetupAction:
-            pass
+        if not self._current_action.next is None:
+            self._current_action = self._current_action.next
+            self._current_action.do()
 
     def previous(self):
         '''
         Go back to previous action, corresponding events will be triggered
         '''
-        _current_action = _current_action.next
-        if _current_action is MoveAction:
-            pass
-        elif _current_action is SetupAction:
-            pass
+        self._current_action.undo()
+        if not self._current_action.previous is None:
+            self._current_action = self._current_action.previous
 
 # private methods / Game info and actions from/to sgf
     def _get_sgf_root_node(self):
@@ -247,10 +222,10 @@ class GoGame(BaseObject):
         # So the first time of ieteration is for identifying the action type
         for prop in node.properties:
             if prop.ident in PROP_IDENTS_MOVE:
-                action = MoveAction()
+                action = MoveAction(self._observer)
                 break
             elif prop.ident in PROP_IDENTS_SETUP:
-                action = SetupAction()
+                action = SetupAction(self._observer)
                 break
         # OK, take the second time of properties iteration for translating
         for prop in node.properties:
