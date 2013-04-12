@@ -198,7 +198,7 @@ class GoGame(BaseObject):
                     boardSize.row = int(simpleValue)
                 kifuInfo.size = boardSize
             elif ident == PROP_FG:
-                settings.figure_options = int(simpleValue)
+                settings.figure = FigureInfo(int(simpleValue),values[0].valueB)
             elif ident == PROP_PM:
                 settings.print_mode = int(simpleValue)
             else:
@@ -229,7 +229,7 @@ class GoGame(BaseObject):
         '''
         Convert one sgf node to a single action of go game
         '''
-        action = MoveAction()
+        action = SetupAction()
         # Will B/W/VW props always be the first one of the node?
         # Actually no...but we must be sure action is constructed in time before
         #     any other props are translated to attribute of it.
@@ -246,11 +246,11 @@ class GoGame(BaseObject):
             simpleValue = values[0].valueA
             # move
             if ident == PROP_B or ident == PROP_W:
+                stoneCoord = self._coord_from_lc_letters(simpleValue)
                 if ident == PROP_B:
-                    action.move.stone = GAME_STONE_BLACK
+                    action.move.stone = Stone(GAME_STONE_BLACK, stoneCoord)
                 elif ident == PROP_W:
-                    action.move.stone = GAME_STONE_WHITE
-                action.move.position = self._coord_from_lc_letters(simpleValue)
+                    action.move.stone = Stone(GAME_STONE_WHITE, stoneCoord)
             elif ident == PROP_BL:
                 action.move.time_left_black = float(simpleValue)
             elif ident == PROP_WL:
@@ -271,21 +271,49 @@ class GoGame(BaseObject):
                 action.move.moves_left_white = int(simpleValue)
             elif ident == PROP_TE:
                 action.move.is_tejitsu = bool(simpleValue)
+            # stones setup
+            elif ident == PROP_AB or ident == PROP_AW or ident == PROP_AE:
+                for value in values:
+                    stoneCoord = self._coord_from_lc_letters(value.valueA)
+                    setupStone = None
+                    if ident == PROP_AB:
+                        setupStone = Stone(GAME_STONE_BLACK,stoneCoord)
+                    elif ident == PROP_AW:
+                        setupStone = Stone(GAME_STONE_WHITE,stoneCoord)
+                    elif ident == PROP_AE:
+                        setupStone = Stone(GAME_STONE_EMPTY,stoneCoord)
+                    action.stones.append(setupStone)
+            elif ident == PROP_PL:
+                if simpleValue == PROP_VALUE_BLACK:
+                    action.player_to_move = GAME_STONE_BLACK
+                elif simpleValue == PROP_VALUE_WHITE:
+                    action.player_to_move = GAME_STONE_WHITE
+            elif ident == PROP_VW:
+                action.is_view = True
+                expanedValues = self._expand_composed_value(prop)
+                for value in values:
+                    viewPos = Stone(GAME_STONE_EMPTY,\
+                        self._coord_from_lc_letters(value.valueA))
+                    action.stones.append(viewPos)
             # mutual
             elif ident == PROP_C:
-                pass
+                action.comment = simpleValue
             elif ident == PROP_GB:
-                pass
+                action.is_black_good = bool(simpleValue)
             elif ident == PROP_GW:
-                pass
+                action.is_white_good = bool(simpleValue)
             elif ident == PROP_V:
-                pass
+                action.value = float(simpleValue)
             elif ident == PROP_HO:
-                pass
+                action.is_hotspot = bool(simpleValue)
             elif ident == PROP_FG:
-                pass
+                action.figure = FigureInfo(int(simpleValue),values[0].valueB)
             elif ident == PROP_DM:
-                pass
+                action.even_position = float(simpleValue)
+            elif ident == PROP_N:
+                action.name = simpleValue
+            elif ident == PROP_UC:
+                action.is_unclear = bool(simpleValue)
             # marks
             elif ident == PROP_AR:
                 for value in values:
@@ -339,19 +367,6 @@ class GoGame(BaseObject):
                     triangleMark = Mark(GAME_MARK_SQUARE,\
                         self._coord_from_lc_letters(value.valueA))
                     action.marks.append(triangleMark)
-            # stones setup
-            elif ident == PROP_AB or ident == PROP_AW or ident == PROP_AE:
-                pass
-            elif ident == PROP_PL:
-                pass
-            elif ident == PROP_UC:
-                pass
-            elif ident == PROP_PM:
-                pass
-            elif ident == PROP_N:
-                pass
-            elif ident == PROP_VW:
-                pass
             else:
                 raise SgfTranslateException("unrecognized action prop ident " + ident)
         return action

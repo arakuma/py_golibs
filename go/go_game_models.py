@@ -35,11 +35,9 @@ class Stone(BaseObject):
         self.coord = coord
 
 class Move(BaseObject):
-    def __init__(self, stone = None, figure = None):
+    def __init__(self, stone = None):
         self.number         = 0
         self.stone          = stone
-        self.figure         = figure
-        self.value          = 0
         self.is_bad         = False
         self.is_doubtful    = False
         self.is_interesting = False
@@ -70,7 +68,10 @@ class Action(BaseObject):
         self.is_hotspot     = False
         self.is_black_good  = False
         self.is_white_good  = False
-        self.is_event       = False
+        self.even_position  = 0.0
+        self.is_unclear     = False
+        self.value          = 0
+        self.figure         = None
 
 class MoveAction(Action):
     '''
@@ -87,8 +88,9 @@ class SetupAction(Action):
     '''
     def __init__(self, name = "", stones = None):
         super.__init__(name)
-        self.stones = stones
+        self.stones         = stones
         self.player_to_move = GAME_STONE_BASE
+        self.is_view        = False
         if self.stones is None: self.stones = []
 
 # Models / Go Game attributes
