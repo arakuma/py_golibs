@@ -9,24 +9,7 @@
 #-------------------------------------------------------------------------------
 
 from common.utility import BaseObject
-
-# ENUMS
-GAME_RESULT_BASE    = 0
-GAME_RESULT_DRAW    = GAME_RESULT_BASE + 1
-GAME_RESULT_WINS    = GAME_RESULT_BASE + 2
-GAME_RESULT_RESIGNS = GAME_RESULT_BASE + 3
-GAME_STONE_BASE     = 10
-GAME_STONE_BLACK    = GAME_STONE_BASE  + 1
-GAME_STONE_WHITE    = GAME_STONE_BASE  + 2
-GAME_MARK_BASE      = 50
-GAME_MARK_ARROW     = GAME_MARK_BASE   + 1
-GAME_MARK_CIRCLE    = GAME_MARK_BASE   + 2
-GAME_MARK_LABEL     = GAME_MARK_BASE   + 3
-GAME_MARK_LINE      = GAME_MARK_BASE   + 4
-GAME_MARK_X         = GAME_MARK_BASE   + 5
-GAME_MARK_SELECTED  = GAME_MARK_BASE   + 6
-GAME_MARK_SQUARE    = GAME_MARK_BASE   + 7
-GAME_MARK_TRIANGLE  = GAME_MARK_BASE   + 8
+from go_defs import *
 
 # Models / Game observer
 class GameActionObserver:
@@ -45,6 +28,8 @@ class GameActionObserver:
     def stone_removed(self, stone, coord):
         pass
     def mark_added(self, mark):
+        pass
+    def mark_removed(self, mark):
         pass
 
 # Models / Basic structures
@@ -82,6 +67,12 @@ class Move(BaseObject):
 
 # Models / Go game actions
 class Action(BaseObject):
+    '''
+    This is actually an internal class used by GoGame and SgfParser,
+        all actions will be processed to events for upper level use.
+    Basically an Action is converted from and only from one SgfNode
+        and all properties in SgfNode will be parsed to attributes in Action.
+    '''
     def __init__(self, name, marks = None):
         self.name     = name
         self.marks    = marks
