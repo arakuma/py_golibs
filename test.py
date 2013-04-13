@@ -12,6 +12,7 @@
 
 from go.go_game import *
 from go.go_game_models import GameActionObserver
+from go.go_board import *
 
 test_sgf_file = "test.sgf"
 
@@ -37,10 +38,12 @@ def main():
         game.from_sgf(open(test_sgf_file).read())
         print game.info.event,game.info.black_player_name,game.info.white_player_name,\
             game.kifu_info.app_name,game.kifu_info.app_version
-        for i in range(0,30):
+        for i in range(0,50):
             game.next();
-        for i in range(0,30):
+        for i in range(0,50):
             game.previous();
+        board = TextGoBoard(BOARD_SIZE_9)
+        board.show_board()
     except (SgfParseException,SgfTranslateException),ex:
         print "Sgf exception: ",ex
 

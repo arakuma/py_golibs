@@ -12,46 +12,55 @@
 
 from common.utility import BaseObject
 from go_defs import *
+from go_game_models import *
 
 class GoBoard(BaseObject):
     def __init__(self,size):
         self._size        = size
         self._show_number = False
-        self._show_coord  = False
+        self._show_coord  = True
         self._stones      = []
         self._marks       = []
+        self._hoshi_list  = []
+        self._cur_index   = 0
         for y in range(0,size):
             self._stones.append([])
             self._marks.append([])
             for x in range(0,size):
                 self._stones[y].append(None)
                 self._marks[y].append(None)
+        if self._size == BOARD_SIZE_9:
+            self._hoshi_list = BOARD_HOSHI_9
+        elif self._size == BOARD_SIZE_13:
+            self._hoshi_list = BOARD_HOSHI_13
+        elif self._size == BOARD_SIZE_19:
+            self._hoshi_list = BOARD_HOSHI_19
         self._init_board()
 # public methods
     def add_stone(self,stone):
+        if stone.index == 0:
+            self._cur_index += 1
+            stone.index = self._cur_index
         self._stones[stone.coord.x][stone.coord.y] = stone
-        self._draw_board()
     def remove_stone(self,stone):
+        self._cur_index -= 1
         self._stones[stone.coord.x][stone.coord.y] = None
-        self._draw_board()
     def add_mark(self,mark):
         self._marks[mark.from_pos.x][mark.from_pos.y] = mark
-        self._draw_board()
     def remove_mark(self,mark):
         self._marks[mark.from_pos.x][mark.from_pos.y] = None
-        self._draw_board()
     def toggle_number(self):
         self._show_number = not self._show_number
-        self._draw_board()
     def toggle_coord(self):
         self._show_coord = not self._show_coord
-        self._draw_board()
 # private methods
-    def _draw_board(self):
+    def _redraw_board(self):
         self._draw_coords()
         self._draw_lines()
         self._draw_stones()
 # methods need to be overrided
+    def show_board(self):
+        pass
     def _init_board(self):
         pass
     def _draw_coords(self):
@@ -65,11 +74,8 @@ class GoBoard(BaseObject):
 
 class TextGoBoard(GoBoard):
     '''
-    Currently this board class is only for demostration,
-        that's why padding/margin value are not configurable,
-        so is the zoom factor (for board size).
-        They are hardcoded: padding=0, margin=0, zoom_factor=1
-    And marks are not supported (^ ^;)
+    Currently this board class is only for demostration
+    marks are not supported yet (^ ^;)
     Example:
                  a b c d e f g h i--\
           a      ┌─┬─┬─┬─┬─┬─┬─┬─┐a  \
@@ -101,7 +107,7 @@ class TextGoBoard(GoBoard):
     CHR_CORNER_TR          = '┐'
     CHR_CORNER_BR          = '┘'
     CHR_CORNER_BL          = '└'
-    CHR_POINT              = '┼'
+    CHR_INTERSECTION       = '┼'
     CHR_COORD_BASE         = 'a'
     CHR_HOSHI              = '•'
     CHR_EMPTY              = ' '
@@ -113,74 +119,118 @@ class TextGoBoard(GoBoard):
     GRID_ORIGIN            = PADDING + MARGIN + COORD_WIDTH
     ZOOM_FACTOR            = 1 # (ZOOM_FACTOR-1) CHR_LINEs should be added between two y-axis points
                                # CHR_LINE count of x-axis's should be doubled for a nicer look
-
-    def __init__(self,size):
+                                                   #               /│\
+    def __init__(self,size):                       #                │
+        self._extra_line_times_y = self.ZOOM_FACTOR - 1 #           │
+        self._extra_line_times_x = self._extra_line_times_y * 2  #──┘
+        if self._extra_line_times_x == 0:
+            self._extra_line_times_x = 1
         GoBoard.__init__(self,size)
-        self._grid_offset_x = GRID_ORIGIN + (ZOOM_FACTOR*2-1)*(self._size-2)
-        self._grid_offset_y = GRID_ORIGIN + (ZOOM_FACTOR-1)*(self._size-2)
+
+    def add_stone(self,stone):
+        GoBoard.add_stone(self,stone)
+        self._draw_stone(stone)
+    def remove_stone(self,stone):
+        GoBoard.remove_stone(self,stone)
+        self._draw_grid_symbol(stone.coord.x,stone.coord.y,self.CHR_INTERSECTION)
+    def add_mark(self,mark):
+        GoBoard.add_mark(self,mark)
+    def remove_mark(self,mark):
+        GoBoard.remove_mark(self,mark)
+    def toggle_number(self):
+        GoBoard.toggle_number(self,stone)
+    def toggle_coord(self):
+        GoBoard.toggle_coord(self,stone)
+    def show_board(self):
+        for i in range(0,len(self._board[0])):
+            for j in range(0,len(self._board)):
+                print self._board[j][i],
+            print self.CHR_LF
 
     def _init_board(self):
         self._board = []
-        for y in range(0,self.GRID_ORIGIN+self._size+2):
+        boardWidth = self.GRID_ORIGIN+self._size+self._extra_line_times_x*(self._size-1)+self.COORD_WIDTH
+        boardHeight = self.GRID_ORIGIN+self._size+self._extra_line_times_y*(self._size-1)+self.COORD_WIDTH
+        for x in range(0,boardWidth):
             self._board.append([])
-            for x in range(0,self.GRID_ORIGIN+self._size*2+1):
-                self._board[y].append(self.CHR_EMPTY)
-            self._board[y].append(self.CHR_LF) # an extra space for new line
-
-    def _draw_board(self):
-        GoBoard._draw_board(self)
-        print self._board
+            for y in range(0,boardHeight):
+                self._board[x].append(self.CHR_EMPTY)
+        self._redraw_board()
 
     def _draw_coords(self):
-        for i in range(0,self._size):
+        for i in range(0,self._size-1):
             # h-coords
             coord_text = self.CHR_EMPTY
             if self._show_coord:
                 coord_text = chr(ord(self.CHR_COORD_BASE)+i)
-            self._board[i*2+1][0] = coord_text
-            self._board[i*2+1][self._size+2] = coord_text
+            posH1 = self.GRID_ORIGIN + self._extra_line_times_x * i + i - self.COORD_WIDTH
+            posH2 = self.GRID_ORIGIN + self._extra_line_times_x * self._size - self.COORD_WIDTH
+            self._board[posH1][self.GRID_ORIGIN - self.COORD_WIDTH] = coord_text
+            self._board[posH1][posH2] = coord_text
             # v-coords
-            self._board[0][i+1] = coord_text
-            self._board[self._size*2][i+1] = coord_text
+            posV1 = self.GRID_ORIGIN + self._extra_line_times_y * i - self.COORD_WIDTH
+            posV2 = self.GRID_ORIGIN + self._extra_line_times_y * self._size - self.COORD_WIDTH
+            self._board[self.GRID_ORIGIN - self.COORD_WIDTH][posV1] = coord_text
+            self._board[posV2][posV1] = coord_text
 
     def _draw_lines(self):
         # corners
         self._draw_grid_symbol(0,0,self.CHR_CORNER_TL)
-        self._draw_grid_symbol(0,0,self.CHR_CORNER_TL)
-        self._draw_grid_symbol(0,0,self.CHR_CORNER_TL)
-        self._draw_grid_symbol(0,0,self.CHR_CORNER_TL)
-        self._board[1][1]                     = self.CHR_CORNER_TL
-        self._board[self._size*2][1]          = self.CHR_CORNER_TR
-        self._board[1][self._size]            = self.CHR_CORNER_BL
-        self._board[self._size*2][self._size] = self.CHR_CORNER_BR
-        # borders
+        self._draw_grid_symbol(self._size-1,0,self.CHR_CORNER_TR)
+        self._draw_grid_symbol(0,self._size-1,self.CHR_CORNER_BL)
+        self._draw_grid_symbol(self._size-1,self._size-1,self.CHR_CORNER_BR)
+        # borders & lines
         for i in range(1,self._size-1):   # two corners should be excluded
             # h-borders
-            self._board[i*2+1][1] = self.CHR_BORDER_TOP
-            self._board[i*2+1][self._size] = self.CHR_BORDER_BOTTOM
-            self._board[i*2][1] = self.CHR_LINE_H
-            self._board[i*2][1] = self.CHR_LINE_V
-            if i == self._size - 2:
-                # last pos of h-border
-                self._board[i*2+2][1] = self.CHR_LINE_H
-                self._board[i*2+2][self._size] = self.CHR_LINE_V
+            self._draw_grid_symbol(i,0,self.CHR_BORDER_TOP)
+            self._draw_grid_symbol(i,self._size-1,self.CHR_BORDER_TOP)
             # v-borders
-        # lines
-        for i in range(0,self._size):
-            # h-lines
-
-            # v-lines
-            pass
+            self._draw_grid_symbol(0,i,self.CHR_BORDER_LEFT)
+            self._draw_grid_symbol(self._size-1,i,self.CHR_BORDER_RIGHT)
+            for j in range(1,self._size-1):
+                # intersections
+                intersectionSymbol = self.CHR_INTERSECTION
+                if (i,j) in self._hoshi_list:
+                    # hoshi point
+                    intersectionSymbol = self.CHR_HOSHI
+                self._draw_grid_symbol(i,j,intersectionSymbol)
+        # extra padding between lines
+        for i in range(0,self._size-1):
+            for j in range(0,self._size-1):
+                # h-extra-lines
+                for k in range(i+1,i+1+self._extra_line_times_x):
+                    self._board[k][j] = self.CHR_LINE_H
+                # v-extra-lines
+                for k in range(j+1,j+1+self._extra_line_times_y):
+                    self._board[i][k] = self.CHR_LINE_V
 
     def _draw_stones(self):
-        pass
+        for x in range(0,len(self._stones)):
+            stoneSeq = self._stones[x]
+            for y in range(0,len(stoneSeq)):
+                if not self._stones[x][y] is None:
+                    self._draw_stone(self._stones[x][y])
+
+    def _draw_stone(self,stone):
+        stoneSymbol = self.CHR_INTERSECTION
+        if self._show_number:
+            stoneSymbol = str(stone.index)
+        else:
+            if stone.color == GAME_STONE_BLACK:
+                stoneSymbol = self.CHR_STONE_BLACK
+            elif stone.color == GAME_STONE_WHITE:
+                stoneSymbol = self.CHR_STONE_WHITE
+        self._draw_grid_symbol(stone.coord.x,stone.coord.y,stoneSymbol)
 
     def _draw_grid_symbol(self,x,y,symbol):
         '''
         This method is for grid origin translation because:
             1.margin/padding and the coord itself will affect on the start point of grid in board matrix
-            2.x-axis needs extra padding for a nicer look
+            2.zoom factor and extra line padding for x-axis
         '''
-        x += self.GRID_ORIGIN8
-        y += self.GRID_ORIGIN + (ZOOM_FACTOR-1)
-        self._board[x][y] = symbol
+        x = self.GRID_ORIGIN + self._extra_line_times_x * x + x
+        y = self.GRID_ORIGIN + self._extra_line_times_y * y + y
+        try:
+            self._board[x][y] = symbol
+        except:
+            print x,",",y,",",symbol

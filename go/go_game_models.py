@@ -58,6 +58,7 @@ class Stone(BaseObject):
     def __init__(self, color, coord):
         self.color = color # GAME_STONE_BASE
         self.coord = coord
+        self.index = 0
 
 class Move(BaseObject):
     def __init__(self, stone = None):
@@ -72,6 +73,9 @@ class Move(BaseObject):
         self.time_left_white      = 0.0
         self.moves_left_black     = 0
         self.moves_left_white     = 0
+    def set_number(self,number):
+        self.number = number
+        self.stone.index = number
 
 # Models / Go game actions
 class Action(BaseObject):
