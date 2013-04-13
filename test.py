@@ -18,13 +18,15 @@ test_sgf_file = "test.sgf"
 
 class GoGameEventTester(GameActionObserver):
     def __init__(self):
-        pass
+        self.board = TextGoBoard(BOARD_SIZE_19)
     def move_performed(self, move):
-        print "move_performed"
+        self.board.add_stone(move.stone)
+        self.board.show_board()
     def variation_available(self, moves):
         print "variation_available"
     def stone_added(self, stone):
-        print "stone_added"
+        self.board.add_stone(move.stone)
+        self.board.show_board()
     def stone_removed(self, stone):
         print "stone_removed"
     def mark_added(self, mark):
@@ -38,12 +40,10 @@ def main():
         game.from_sgf(open(test_sgf_file).read())
         print game.info.event,game.info.black_player_name,game.info.white_player_name,\
             game.kifu_info.app_name,game.kifu_info.app_version
-        #for i in range(0,50):
-        #    game.next();
+        for i in range(0,50):
+            game.next();
         #for i in range(0,50):
         #    game.previous();
-        board = TextGoBoard(BOARD_SIZE_9)
-        board.show_board()
     except (SgfParseException,SgfTranslateException),ex:
         print "Sgf exception: ",ex
 

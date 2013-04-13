@@ -128,7 +128,6 @@ class TextGoBoard(GoBoard):
     CHR_COORD_BASE         = 'a'
     CHR_EMPTY              = ' '
     CHR_LF                 = '\n'
-
     PADDING                = 1
     MARGIN                 = 0
     COORD_WIDTH            = 1
