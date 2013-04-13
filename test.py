@@ -38,10 +38,10 @@ def main():
         game.from_sgf(open(test_sgf_file).read())
         print game.info.event,game.info.black_player_name,game.info.white_player_name,\
             game.kifu_info.app_name,game.kifu_info.app_version
-        for i in range(0,50):
-            game.next();
-        for i in range(0,50):
-            game.previous();
+        #for i in range(0,50):
+        #    game.next();
+        #for i in range(0,50):
+        #    game.previous();
         board = TextGoBoard(BOARD_SIZE_9)
         board.show_board()
     except (SgfParseException,SgfTranslateException),ex:

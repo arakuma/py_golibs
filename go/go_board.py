@@ -57,7 +57,7 @@ class GoBoard(BaseObject):
     def _redraw_board(self):
         self._draw_coords()
         self._draw_lines()
-        self._draw_stones()
+        #self._draw_stones()
 # methods need to be overrided
     def show_board(self):
         pass
@@ -95,6 +95,7 @@ class TextGoBoard(GoBoard):
                   \/
                  board = grid + coord + padding + margin
     '''
+    '''
     CHR_STONE_BLACK        = '☻'
     CHR_STONE_WHITE        = '☺'
     CHR_BORDER_LEFT        = '├'
@@ -108,8 +109,23 @@ class TextGoBoard(GoBoard):
     CHR_CORNER_BR          = '┘'
     CHR_CORNER_BL          = '└'
     CHR_INTERSECTION       = '┼'
-    CHR_COORD_BASE         = 'a'
     CHR_HOSHI              = '•'
+    '''
+    CHR_STONE_BLACK        = 'B'
+    CHR_STONE_WHITE        = 'W'
+    CHR_BORDER_LEFT        = '|'
+    CHR_BORDER_TOP         = '-'
+    CHR_BORDER_RIGHT       = '|'
+    CHR_BORDER_BOTTOM      = '-'
+    CHR_LINE_H             = '-'
+    CHR_LINE_V             = '|'
+    CHR_CORNER_TL          = '|'
+    CHR_CORNER_TR          = '|'
+    CHR_CORNER_BR          = '|'
+    CHR_CORNER_BL          = '|'
+    CHR_INTERSECTION       = '+'
+    CHR_HOSHI              = '*'
+    CHR_COORD_BASE         = 'a'
     CHR_EMPTY              = ' '
     CHR_LF                 = '\n'
 
@@ -143,9 +159,10 @@ class TextGoBoard(GoBoard):
         GoBoard.toggle_coord(self,stone)
     def show_board(self):
         for i in range(0,len(self._board[0])):
+            line = ""
             for j in range(0,len(self._board)):
-                print self._board[j][i],
-            print self.CHR_LF
+                line += self._board[j][i]
+            print line
 
     def _init_board(self):
         self._board = []
@@ -158,20 +175,20 @@ class TextGoBoard(GoBoard):
         self._redraw_board()
 
     def _draw_coords(self):
-        for i in range(0,self._size-1):
+        hBottomY = self.GRID_ORIGIN + self._extra_line_times_y * self._size + self._size
+        vRightX  = self.GRID_ORIGIN + self._extra_line_times_x * self._size + self._size - self.COORD_WIDTH
+        for i in range(0,self._size):
             # h-coords
             coord_text = self.CHR_EMPTY
             if self._show_coord:
                 coord_text = chr(ord(self.CHR_COORD_BASE)+i)
-            posH1 = self.GRID_ORIGIN + self._extra_line_times_x * i + i - self.COORD_WIDTH
-            posH2 = self.GRID_ORIGIN + self._extra_line_times_x * self._size - self.COORD_WIDTH
-            self._board[posH1][self.GRID_ORIGIN - self.COORD_WIDTH] = coord_text
-            self._board[posH1][posH2] = coord_text
+            hX = self.GRID_ORIGIN + self._extra_line_times_x * i + i
+            self._board[hX][self.GRID_ORIGIN - self.COORD_WIDTH] = coord_text
+            self._board[hX][hBottomY] = coord_text
             # v-coords
-            posV1 = self.GRID_ORIGIN + self._extra_line_times_y * i - self.COORD_WIDTH
-            posV2 = self.GRID_ORIGIN + self._extra_line_times_y * self._size - self.COORD_WIDTH
-            self._board[self.GRID_ORIGIN - self.COORD_WIDTH][posV1] = coord_text
-            self._board[posV2][posV1] = coord_text
+            vY = self.GRID_ORIGIN + self._extra_line_times_y * i + i
+            self._board[self.GRID_ORIGIN - self.COORD_WIDTH][vY] = coord_text
+            self._board[vRightX][vY] = coord_text
 
     def _draw_lines(self):
         # corners
@@ -196,10 +213,12 @@ class TextGoBoard(GoBoard):
                 self._draw_grid_symbol(i,j,intersectionSymbol)
         # extra padding between lines
         for i in range(0,self._size-1):
-            for j in range(0,self._size-1):
+            for j in range(0,self._size):
+                x = self.GRID_ORIGIN + self._extra_line_times_x * i + i + 1
+                y = self.GRID_ORIGIN + self._extra_line_times_y * j + j
                 # h-extra-lines
-                for k in range(i+1,i+1+self._extra_line_times_x):
-                    self._board[k][j] = self.CHR_LINE_H
+                for k in range(0,self._extra_line_times_x):
+                    self._board[x+k][y] = self.CHR_LINE_H
                 # v-extra-lines
                 for k in range(j+1,j+1+self._extra_line_times_y):
                     self._board[i][k] = self.CHR_LINE_V
