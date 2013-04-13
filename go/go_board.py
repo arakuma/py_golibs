@@ -113,26 +113,27 @@ class TextGoBoard(GoBoard):
     '''
     CHR_STONE_BLACK        = 'B'
     CHR_STONE_WHITE        = 'W'
-    CHR_BORDER_LEFT        = '|'
-    CHR_BORDER_TOP         = '-'
-    CHR_BORDER_RIGHT       = '|'
-    CHR_BORDER_BOTTOM      = '-'
+    CHR_BORDER_LEFT        = '+'
+    CHR_BORDER_TOP         = '+'
+    CHR_BORDER_RIGHT       = '+'
+    CHR_BORDER_BOTTOM      = '+'
     CHR_LINE_H             = '-'
     CHR_LINE_V             = '|'
-    CHR_CORNER_TL          = '|'
-    CHR_CORNER_TR          = '|'
-    CHR_CORNER_BR          = '|'
-    CHR_CORNER_BL          = '|'
+    CHR_CORNER_TL          = '+'
+    CHR_CORNER_TR          = '+'
+    CHR_CORNER_BR          = '+'
+    CHR_CORNER_BL          = '+'
     CHR_INTERSECTION       = '+'
     CHR_HOSHI              = '*'
     CHR_COORD_BASE         = 'a'
     CHR_EMPTY              = ' '
     CHR_LF                 = '\n'
 
-    PADDING                = 0
+    PADDING                = 1
     MARGIN                 = 0
     COORD_WIDTH            = 1
-    GRID_ORIGIN            = PADDING + MARGIN + COORD_WIDTH
+    GRID_ORIGIN_X          = PADDING * 2 + MARGIN * 2 + COORD_WIDTH
+    GRID_ORIGIN_Y          = PADDING + MARGIN + COORD_WIDTH
     ZOOM_FACTOR            = 1 # (ZOOM_FACTOR-1) CHR_LINEs should be added between two y-axis points
                                # CHR_LINE count of x-axis's should be doubled for a nicer look
                                                    #               /│\
@@ -166,8 +167,8 @@ class TextGoBoard(GoBoard):
 
     def _init_board(self):
         self._board = []
-        boardWidth = self.GRID_ORIGIN+self._size+self._extra_line_times_x*(self._size-1)+self.COORD_WIDTH
-        boardHeight = self.GRID_ORIGIN+self._size+self._extra_line_times_y*(self._size-1)+self.COORD_WIDTH
+        boardWidth  = self.GRID_ORIGIN_X+self._size+self._extra_line_times_x*(self._size-1)+self.COORD_WIDTH+self.MARGIN*2+self.PADDING*2
+        boardHeight = self.GRID_ORIGIN_Y+self._size+self._extra_line_times_y*(self._size-1)+self.COORD_WIDTH+self.MARGIN+self.PADDING
         for x in range(0,boardWidth):
             self._board.append([])
             for y in range(0,boardHeight):
@@ -175,19 +176,19 @@ class TextGoBoard(GoBoard):
         self._redraw_board()
 
     def _draw_coords(self):
-        hBottomY = self.GRID_ORIGIN + self._extra_line_times_y * self._size + self._size
-        vRightX  = self.GRID_ORIGIN + self._extra_line_times_x * self._size + self._size - self.COORD_WIDTH
+        hBottomY = self.GRID_ORIGIN_Y + self._extra_line_times_y * (self._size - 1) + self._size + self.PADDING
+        vRightX  = self.GRID_ORIGIN_X + self._extra_line_times_x * (self._size - 1) + self._size + self.PADDING * 2
         for i in range(0,self._size):
             # h-coords
             coord_text = self.CHR_EMPTY
             if self._show_coord:
                 coord_text = chr(ord(self.CHR_COORD_BASE)+i)
-            hX = self.GRID_ORIGIN + self._extra_line_times_x * i + i
-            self._board[hX][self.GRID_ORIGIN - self.COORD_WIDTH] = coord_text
+            hX = self.GRID_ORIGIN_X + self._extra_line_times_x * i + i
+            self._board[hX][self.MARGIN] = coord_text
             self._board[hX][hBottomY] = coord_text
             # v-coords
-            vY = self.GRID_ORIGIN + self._extra_line_times_y * i + i
-            self._board[self.GRID_ORIGIN - self.COORD_WIDTH][vY] = coord_text
+            vY = self.GRID_ORIGIN_Y + self._extra_line_times_y * i + i
+            self._board[self.MARGIN * 2][vY] = coord_text
             self._board[vRightX][vY] = coord_text
 
     def _draw_lines(self):
@@ -214,8 +215,8 @@ class TextGoBoard(GoBoard):
         # extra padding between lines
         for i in range(0,self._size-1):
             for j in range(0,self._size):
-                x = self.GRID_ORIGIN + self._extra_line_times_x * i + i + 1
-                y = self.GRID_ORIGIN + self._extra_line_times_y * j + j
+                x = self.GRID_ORIGIN_X + self._extra_line_times_x * i + i + 1
+                y = self.GRID_ORIGIN_Y + self._extra_line_times_y * j + j
                 # h-extra-lines
                 for k in range(0,self._extra_line_times_x):
                     self._board[x+k][y] = self.CHR_LINE_H
@@ -247,8 +248,8 @@ class TextGoBoard(GoBoard):
             1.margin/padding and the coord itself will affect on the start point of grid in board matrix
             2.zoom factor and extra line padding for x-axis
         '''
-        x = self.GRID_ORIGIN + self._extra_line_times_x * x + x
-        y = self.GRID_ORIGIN + self._extra_line_times_y * y + y
+        x = self.GRID_ORIGIN_X + self._extra_line_times_x * x + x
+        y = self.GRID_ORIGIN_Y + self._extra_line_times_y * y + y
         try:
             self._board[x][y] = symbol
         except:
