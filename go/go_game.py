@@ -205,7 +205,7 @@ class GoGame(BaseObject):
             else:
                 walkingAction.previous = currentAction
                 currentAction.next = walkingAction
-                currentAction = walkingAction
+            currentAction = walkingAction
             if len(walkingNode.variations) > 0:
                 # variations here is treated with recursion
                 for variationRootNode in walkingNode.variations:
@@ -257,7 +257,7 @@ class GoGame(BaseObject):
             elif ident == PROP_KO:
                 action.move.is_ko = bool(simpleValue)
             elif ident == PROP_MN:
-                action.move.number = int(simpleValue)
+                action.move.set_number(int(simpleValue))
             elif ident == PROP_OB:
                 action.move.moves_left_black = int(simpleValue)
             elif ident == PROP_OW:
