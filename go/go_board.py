@@ -148,7 +148,10 @@ class TextGoBoard(GoBoard):
         self._draw_stone(stone)
     def remove_stone(self,stone):
         GoBoard.remove_stone(self,stone)
-        self._draw_grid_symbol(stone.coord.x,stone.coord.y,self.CHR_INTERSECTION)
+        symbol = self.CHR_INTERSECTION
+        if (stone.coord.x,stone.coord.y) in self._hoshi_list:
+            symbol = self.CHR_HOSHI
+        self._draw_grid_symbol(stone.coord.x,stone.coord.y,symbol)
     def add_mark(self,mark):
         GoBoard.add_mark(self,mark)
     def remove_mark(self,mark):
