@@ -109,11 +109,13 @@ class Action(BaseObject):
             self._observer.view_restored()
         else:
             self._observer.view_changed(self.view_points)
-        self._observer.marks_added(self.marks)
+        if len(self.marks) > 0:
+            self._observer.marks_added(self.marks)
         if len(self.variations) > 0:
             self._observer.variation_available(self.variations)
     def undo(self):
-        self._observer.marks_removed(self.marks)
+        if len(self.marks) > 0:
+            self._observer.marks_removed(self.marks)
 
 class MoveAction(Action):
     '''
@@ -128,7 +130,7 @@ class MoveAction(Action):
         self._observer.move_performed(self.move)
     def undo(self):
         Action.undo(self)
-        self._observer.stone_removed(self.move.stone)
+        self._observer.stones_removed([self.move.stone])
 
 class SetupAction(Action):
     '''
