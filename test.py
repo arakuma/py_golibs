@@ -16,36 +16,41 @@ from go.go_board import *
 
 test_sgf_file = "test.sgf"
 
-class GoGameEventTester(GameActionObserver):
+class GoGameTester(GameActionObserver):
     def __init__(self):
-        self.board = TextGoBoard(BOARD_SIZE_19)
+        self._board = TextGoBoard(BOARD_SIZE_19)
+        try:
+            self._game = GoGame(self)
+            self._game.from_sgf(open(test_sgf_file).read())
+            print self._game.kifu_info.app_name,self._game.kifu_info.app_version,\
+                self._game.info.event,self._game.info.black_player_name,self._game.info.white_player_name
+
+            for i in range(0,50):
+                self._game.next();
+            self._board.show_board()
+            for i in range(0,50):
+                self._game.previous();
+            self._board.show_board()
+        except (SgfParseException,SgfTranslateException),ex:
+            print "Sgf exception: ",ex
+
     def move_performed(self, move):
-        self.board.add_stone(move.stone)
-        self.board.show_board()
+        self._board.add_stone(move.stone)
     def variation_available(self, moves):
         print "variation_available"
-    def stone_added(self, stone):
-        self.board.add_stone(move.stone)
-        self.board.show_board()
-    def stone_removed(self, stone):
-        print "stone_removed"
-    def mark_added(self, mark):
-        print "mark_added"
-    def mark_removed(self, mark):
-        print "mark_removed"
+    def stones_added(self, stones):
+        for stone in stones:
+            self._board.add_stone(stone)
+    def stones_removed(self, stones):
+        for stone in stones:
+            self._board.remove_stone(stone)
+    def marks_added(self, marks):
+        print "marks_added"
+    def marks_removed(self, marks):
+        print "marks_removed"
 
 def main():
-    try:
-        game = GoGame(GoGameEventTester())
-        game.from_sgf(open(test_sgf_file).read())
-        print game.info.event,game.info.black_player_name,game.info.white_player_name,\
-            game.kifu_info.app_name,game.kifu_info.app_version
-        for i in range(0,50):
-            game.next();
-        #for i in range(0,50):
-        #    game.previous();
-    except (SgfParseException,SgfTranslateException),ex:
-        print "Sgf exception: ",ex
+    tester = GoGameTester()
 
 if __name__ == '__main__':
     main()

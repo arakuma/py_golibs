@@ -17,19 +17,20 @@ class GameActionObserver:
     Interface for being notified about all game actions:
         1.stone add/remove
         2.action performed
-        3.mark add
+        3.mark add/remove
+        4.view zone change
     '''
     def move_performed(self, move):
         pass
     def variation_available(self, moves):
         pass
-    def stone_added(self, stone):
+    def stones_added(self, stone):
         pass
-    def stone_removed(self, stone):
+    def stones_removed(self, stone):
         pass
-    def mark_added(self, mark):
+    def marks_added(self, mark):
         pass
-    def mark_removed(self, mark):
+    def marks_removed(self, mark):
         pass
     def view_changed(self, points):
         pass
@@ -104,14 +105,15 @@ class Action(BaseObject):
         self.figure         = None
         self.view_points    = []
     def do(self):
-        self._observer.view_changed(self.view_points)
-        for mark in self.marks:
-            self._observer.mark_added(mark)
+        if len(self.view_points) == 0:
+            self._observer.view_restored()
+        else:
+            self._observer.view_changed(self.view_points)
+        self._observer.marks_added(self.marks)
         if len(self.variations) > 0:
             self._observer.variation_available(self.variations)
     def undo(self):
-        for mark in self.marks:
-            self._observer.mark_removed(mark)
+        self._observer.marks_removed(self.marks)
 
 class MoveAction(Action):
     '''
@@ -139,12 +141,10 @@ class SetupAction(Action):
         if self.stones is None: self.stones = []
     def do(self):
         Action.do(self)
-        for stone in self.stones:
-            _observer.stone_added(stone)
+        _observer.stone_added(self.stones)
     def undo(self):
         Action.undo(self)
-        for stone in self.stones:
-            _observer.stone_removed(stone)
+        _observer.stones_removed(self.stones)
 
 # Models / Go Game attributes
 class GoGameSettings(BaseObject):

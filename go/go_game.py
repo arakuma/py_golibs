@@ -202,6 +202,7 @@ class GoGame(BaseObject):
                 # link up the root action to the new one
                 walkingAction.previous = rootAction
                 rootAction.next = walkingAction
+                rootAction.variations.append(walkingAction)
             else:
                 walkingAction.previous = currentAction
                 currentAction.next = walkingAction
