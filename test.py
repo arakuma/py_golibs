@@ -22,11 +22,16 @@ class GoGameTester(GameActionObserver):
         try:
             self._game = GoGame(self)
             self._game.from_sgf(open(test_sgf_file).read())
-            print self._game.kifu_info.app_name,self._game.kifu_info.app_version,\
-                self._game.info.event,self._game.info.black_player_name,self._game.info.white_player_name
+            print "SGF recorded with %s %s by %s\n"\
+                    "Event %s @ %s on %s\n"\
+                    "Black: %s (%s), White %s (%s)\n" %\
+                    (self._game.kifu_info.app_name,self._game.kifu_info.app_version,self._game.kifu_info.user,\
+                    self._game.info.event, self._game.info.place, self._game.info.date,\
+                    self._game.info.black_player_name, self._game.info.black_player_rank,self._game.info.white_player_name, self._game.info.white_player_rank)
 
             for i in range(0,50):
                 self._game.next();
+            self._board.toggle_number()
             self._board.show_board()
             for i in range(0,50):
                 self._game.previous();

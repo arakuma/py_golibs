@@ -152,14 +152,14 @@ class GoGame(BaseObject):
                 gameInfo.opening = simpleValue
             elif ident == PROP_GC:
                 gameInfo.game_comment = simpleValue
-            elif ident == PROP_SO:
-                gameInfo.source = simpleValue
-            elif ident == PROP_US:
-                gameInfo.user = simpleValue
             elif ident == PROP_AN:
                 gameInfo.annotation = simpleValue
             elif ident == PROP_CP:
                 gameInfo.copyright = simpleValue
+            elif ident == PROP_US:
+                kifuInfo.user = simpleValue
+            elif ident == PROP_SO:
+                kifuInfo.source = simpleValue
             elif ident == PROP_AP:
                 kifuInfo.app_name = valuePair.valueA
                 kifuInfo.app_version = float(valuePair.valueB)

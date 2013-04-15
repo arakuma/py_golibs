@@ -57,7 +57,7 @@ class GoBoard(BaseObject):
     def _redraw_board(self):
         self._draw_coords()
         self._draw_lines()
-        #self._draw_stones()
+        self._draw_stones()
 # methods need to be overrided
     def show_board(self):
         pass
@@ -157,10 +157,11 @@ class TextGoBoard(GoBoard):
     def remove_mark(self,mark):
         GoBoard.remove_mark(self,mark)
     def toggle_number(self):
-        GoBoard.toggle_number(self,stone)
+        GoBoard.toggle_number(self)
     def toggle_coord(self):
-        GoBoard.toggle_coord(self,stone)
+        GoBoard.toggle_coord(self)
     def show_board(self):
+        self._redraw_board()
         for i in range(0,len(self._board[0])):
             line = ""
             for j in range(0,len(self._board)):

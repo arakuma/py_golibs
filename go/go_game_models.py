@@ -163,6 +163,8 @@ class KifuInfo(BaseObject):
         self.style        = 0
         self.size         = None
         self.game         = 0
+        self.source       = ""
+        self.user         = ""
 
 class BoardSize(BaseObject):
     def __init__(self):
@@ -200,7 +202,5 @@ class GoGameInfo(BaseObject):
         self.game_name         = ""
         self.opening           = ""
         self.game_comment      = ""
-        self.source            = ""
-        self.user              = ""
         self.annotation        = ""
         self.copyright         = ""
