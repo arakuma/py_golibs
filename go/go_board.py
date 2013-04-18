@@ -133,14 +133,17 @@ class TextGoBoard(GoBoard):
     COORD_WIDTH            = 1
     GRID_ORIGIN_X          = PADDING * 2 + MARGIN * 2 + COORD_WIDTH
     GRID_ORIGIN_Y          = PADDING + MARGIN + COORD_WIDTH
-    ZOOM_FACTOR            = 1 # (ZOOM_FACTOR-1) CHR_LINEs should be added between two y-axis points
+    SYMBOL_WIDTH           = 3
+    ZOOM_FACTOR            = 1 # CHR_LINEs of count (ZOOM_FACTOR-1) should be added between two y-axis points
                                # CHR_LINE count of x-axis's should be doubled for a nicer look
-                                                   #               /│\
-    def __init__(self,size):                       #                │
-        self._extra_line_times_y = self.ZOOM_FACTOR - 1 #           │
-        self._extra_line_times_x = self._extra_line_times_y * 2  #──┘
-        if self._extra_line_times_x == 0:
-            self._extra_line_times_x = 1
+                                                   #                    /│\
+    def __init__(self,size):                       #                     │
+        self._extra_line_times_y = self.ZOOM_FACTOR - 1 #                │
+        self._extra_line_times_x = self._extra_line_times_y #            │
+        if self.SYMBOL_WIDTH < 3:                        #               │                                                 #        │
+            self._extra_line_times_x = self._extra_line_times_y * 2  #───┘
+            if self._extra_line_times_x == 0:
+                self._extra_line_times_x = 1
         GoBoard.__init__(self,size)
 
     def add_stone(self,stone):
@@ -170,7 +173,7 @@ class TextGoBoard(GoBoard):
 
     def _init_board(self):
         self._board = []
-        boardWidth  = self.GRID_ORIGIN_X+self._size+self._extra_line_times_x*(self._size-1)+self.COORD_WIDTH+self.MARGIN*2+self.PADDING*2
+        boardWidth  = self.GRID_ORIGIN_X+self.SYMBOL_WIDTH*self._size+self._extra_line_times_x*(self._size-1)+self.COORD_WIDTH+self.MARGIN*2+self.PADDING*2
         boardHeight = self.GRID_ORIGIN_Y+self._size+self._extra_line_times_y*(self._size-1)+self.COORD_WIDTH+self.MARGIN+self.PADDING
         for x in range(0,boardWidth):
             self._board.append([])
@@ -180,15 +183,24 @@ class TextGoBoard(GoBoard):
 
     def _draw_coords(self):
         hBottomY = self.GRID_ORIGIN_Y + self._extra_line_times_y * (self._size - 1) + self._size + self.PADDING
-        vRightX  = self.GRID_ORIGIN_X + self._extra_line_times_x * (self._size - 1) + self._size + self.PADDING * 2
+        vRightX  = self.GRID_ORIGIN_X + self._extra_line_times_x * (self._size - 1) + self.SYMBOL_WIDTH*self._size + self.PADDING * 2
         for i in range(0,self._size):
             # h-coords
             coord_text = self.CHR_EMPTY
             if self._show_coord:
                 coord_text = chr(ord(self.CHR_COORD_BASE)+i)
-            hX = self.GRID_ORIGIN_X + self._extra_line_times_x * i + i
-            self._board[hX][self.MARGIN] = coord_text
-            self._board[hX][hBottomY] = coord_text
+            hX = self.GRID_ORIGIN_X + self._extra_line_times_x * i + self.SYMBOL_WIDTH*i
+            if len(coord_text) > self.SYMBOL_WIDTH:
+                raise Exception("Symbol is wider than the space to be filled in.")
+            symbol_range_start = (self.SYMBOL_WIDTH - len(coord_text)) / 2
+            symbol_range = range(symbol_range_start, symbol_range_start + len(coord_text))
+            for dx in range(0,self.SYMBOL_WIDTH):
+                if dx in symbol_range:
+                    self._board[hX+dx][self.MARGIN] = coord_text[dx-symbol_range_start]
+                    self._board[hX+dx][hBottomY] = coord_text[dx-symbol_range_start]
+                else:
+                    self._board[hX+dx][self.MARGIN] = self.CHR_EMPTY
+                    self._board[hX+dx][hBottomY] = self.CHR_EMPTY
             # v-coords
             vY = self.GRID_ORIGIN_Y + self._extra_line_times_y * i + i
             self._board[self.MARGIN * 2][vY] = coord_text
@@ -218,7 +230,7 @@ class TextGoBoard(GoBoard):
         # extra padding between lines
         for i in range(0,self._size-1):
             for j in range(0,self._size):
-                x = self.GRID_ORIGIN_X + self._extra_line_times_x * i + i + 1
+                x = self.GRID_ORIGIN_X + self._extra_line_times_x * i + self.SYMBOL_WIDTH*(i+1)
                 y = self.GRID_ORIGIN_Y + self._extra_line_times_y * j + j
                 # h-extra-lines
                 for k in range(0,self._extra_line_times_x):
@@ -251,9 +263,17 @@ class TextGoBoard(GoBoard):
             1.margin/padding and the coord itself will affect on the start point of grid in board matrix
             2.zoom factor and extra line padding for x-axis
         '''
-        x = self.GRID_ORIGIN_X + self._extra_line_times_x * x + x
+        x = self.GRID_ORIGIN_X + self._extra_line_times_x * x + self.SYMBOL_WIDTH*x
         y = self.GRID_ORIGIN_Y + self._extra_line_times_y * y + y
         try:
-            self._board[x][y] = symbol
+            if len(symbol) > self.SYMBOL_WIDTH:
+                raise Exception("Symbol is wider than the space to be filled in.")
+            symbol_range_start = (self.SYMBOL_WIDTH - len(symbol)) / 2
+            symbol_range = range(symbol_range_start, symbol_range_start + len(symbol))
+            for dx in range(0,self.SYMBOL_WIDTH):
+                if dx in symbol_range:
+                    self._board[dx+x][y] = symbol[dx-symbol_range_start]
+                else:
+                    self._board[dx+x][y] = self.CHR_EMPTY
         except:
             print x,",",y,",",symbol
