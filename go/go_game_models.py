@@ -24,15 +24,15 @@ class GameActionObserver:
         pass
     def variation_available(self, moves):
         pass
-    def stones_added(self, stone):
+    def stones_added(self, stones):
         pass
-    def stones_removed(self, stone):
+    def stones_removed(self, stones):
         pass
     def marks_added(self, mark):
         pass
     def marks_removed(self, mark):
         pass
-    def view_changed(self, points):
+    def view_changed(self, intersects):
         pass
     def view_restored(self):
         pass
